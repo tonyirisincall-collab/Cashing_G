@@ -347,9 +347,9 @@
     }
     body.light .toast-sub { color: #2a4a7a; }
 
-    /* R2 toast – only the message, no heading */
+    /* R2 toast – only the message, larger */
     .r2-toast .toast-text {
-      font-size: 2.5rem; /* slightly larger for emphasis */
+      font-size: 2.5rem;
     }
 
     .audio-hint {
@@ -434,7 +434,7 @@
   <div class="toast-sub" id="toastSub"></div>
 </div>
 
-<!-- R2 Message Toast (only the message, large) -->
+<!-- R2 Message Toast (only the message) -->
 <div class="center-toast r2-toast" id="r2Toast">
   <div class="toast-text" id="r2ToastMessage">Message</div>
 </div>
@@ -504,7 +504,7 @@
       audioAllowed = true;
       audioStateHint.textContent = 'Sound on';
       audioBtn.style.color = '#6ef0b0';
-      updateTicker('Audio enabled', false);
+      updateTicker('Audio enabled');
     }
 
     function stopSound() {
@@ -625,11 +625,11 @@
       }, R2_TOAST_DURATION);
     }
 
-    // ======================== TICKER ========================
+    // ======================== TICKER (clean, no symbols) ========================
     function updateTicker(message) {
       const item = document.createElement('div');
       item.className = 'ticker-item';
-      item.textContent = message;
+      item.textContent = message; // pure text, no emoji/symbols
       tickerContent.innerHTML = '';
       tickerContent.appendChild(item);
     }
@@ -709,7 +709,7 @@
       if (newR2 !== prevR2 && newR2.trim() !== '') {
         showR2Toast(newR2);
         playR2Sound();
-        updateTicker(`📢 ${newR2}`);
+        updateTicker(newR2); // clean text, no 📢
       }
     }
 
@@ -735,7 +735,7 @@
         
         if (!previousData) {
           render(data);
-          updateTicker('Dashboard connected', false);
+          updateTicker('Dashboard connected');
         } else {
           detectChanges(data);
           render(data);
