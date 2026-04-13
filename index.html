@@ -31,7 +31,6 @@
       overflow-x: hidden;
     }
 
-    /* Light / Dark themes */
     body.light {
       background: #f5f9ff;
       color: #0a1a2b;
@@ -41,7 +40,6 @@
       color: #ffffff;
     }
 
-    /* Animated background orbs (only visible in dark mode) */
     .bg-orb {
       position: fixed;
       width: 60vmax;
@@ -71,7 +69,6 @@
       z-index: 5;
     }
 
-    /* Top bar */
     .top-bar {
       display: flex;
       justify-content: flex-end;
@@ -150,7 +147,6 @@
       fill: none;
     }
 
-    /* Team cards */
     .counters-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -263,7 +259,6 @@
     }
     body.light .member-tag strong { color: #c47a1a; }
 
-    /* Ticker */
     .ticker-wrap {
       background: #0b1622b0;
       backdrop-filter: blur(16px);
@@ -306,7 +301,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Center toast – stays 30s */
     .center-toast {
       position: fixed;
       top: 50%;
@@ -390,7 +384,6 @@
   </div>
 
   <div class="counters-grid">
-    <!-- Bella Card -->
     <div class="team-card">
       <div class="team-header">
         <svg viewBox="0 0 24 24">
@@ -401,7 +394,6 @@
       <div class="counter-value" id="bellaCounter">0</div>
       <div class="member-strip" id="bellaMembers"></div>
     </div>
-    <!-- Cassie Card -->
     <div class="team-card">
       <div class="team-header">
         <svg viewBox="0 0 24 24">
@@ -415,7 +407,6 @@
     </div>
   </div>
 
-  <!-- Ticker -->
   <div class="ticker-wrap">
     <div class="ticker-icon">
       <svg viewBox="0 0 24 24">
@@ -429,7 +420,6 @@
   </div>
 </div>
 
-<!-- Center Toast -->
 <div class="center-toast" id="centerToast">
   <div class="toast-text" id="toastMain">Sale!</div>
   <div class="toast-sub" id="toastSub"></div>
@@ -439,14 +429,12 @@
   (function(){
     "use strict";
 
-    // ---------- CONFIG ----------
     const API_URL = 'https://script.google.com/macros/s/AKfycbzgXt4BCmxZjC3VzZ5x3FRVmMsH0KhuMhE4bVjtsqjf5M7Zsof8Qw4nIm0higVWNb5O/exec';
     const POLL_INTERVAL = 5000;
-    const CELEBRATION_DURATION = 30000;       // 30 sec
-    const TOAST_DURATION = 30000;             // 30 sec toast
-    const QUEUE_GAP = 30000;                  // 30 sec between queued celebrations
+    const CELEBRATION_DURATION = 30000;
+    const TOAST_DURATION = 30000;
+    const QUEUE_GAP = 30000;
 
-    // State
     let previousData = null;
     let audioCtx = null;
     let audioAllowed = false;
@@ -456,7 +444,6 @@
     let soundSource = null;
     let toastTimeout = null;
 
-    // DOM
     const bellaName = document.getElementById('bellaName');
     const bellaCounter = document.getElementById('bellaCounter');
     const bellaMembers = document.getElementById('bellaMembers');
@@ -473,18 +460,11 @@
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
 
-    // ---------- THEME TOGGLE ----------
     themeToggle.addEventListener('click', () => {
-      if (body.classList.contains('dark')) {
-        body.classList.remove('dark');
-        body.classList.add('light');
-      } else {
-        body.classList.remove('light');
-        body.classList.add('dark');
-      }
+      body.classList.toggle('light');
+      body.classList.toggle('dark');
     });
 
-    // ---------- AUDIO (LOUDER, ATTENTION-GRABBING) ----------
     function initAudio() {
       if (audioCtx) return true;
       try {
@@ -504,27 +484,28 @@
       updateTicker('Audio enabled', false);
     }
 
-    function playLoudDoubleChime() {
+    // 🔔 LOUD BELL SOUND – impossible to miss
+    function playLoudBell() {
       if (!audioAllowed || !audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       stopSound();
 
       const now = audioCtx.currentTime;
       const masterGain = audioCtx.createGain();
-      masterGain.gain.setValueAtTime(0.6, now);  // HIGH VOLUME
+      masterGain.gain.setValueAtTime(0.75, now);  // HIGH VOLUME
       masterGain.connect(audioCtx.destination);
 
-      // First chime – bright and piercing
+      // First bell strike (high)
       const osc1 = audioCtx.createOscillator();
-      osc1.type = 'sawtooth';
-      osc1.frequency.value = 1046.5; // C6
+      osc1.type = 'triangle';
+      osc1.frequency.value = 1396.9; // F6
       const osc2 = audioCtx.createOscillator();
-      osc2.type = 'square';
-      osc2.frequency.value = 1318.5; // E6
+      osc2.type = 'sine';
+      osc2.frequency.value = 1760.0; // A6
 
       const gain1 = audioCtx.createGain();
-      gain1.gain.setValueAtTime(0.8, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      gain1.gain.setValueAtTime(0.9, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
 
       osc1.connect(gain1);
       osc2.connect(gain1);
@@ -532,30 +513,30 @@
 
       osc1.start();
       osc2.start();
-      osc1.stop(now + 0.4);
-      osc2.stop(now + 0.4);
+      osc1.stop(now + 0.9);
+      osc2.stop(now + 0.9);
 
-      // Second chime – slightly lower, still loud
+      // Second bell strike (lower, slightly delayed)
       const osc3 = audioCtx.createOscillator();
-      osc3.type = 'sawtooth';
-      osc3.frequency.value = 880.0; // A5
+      osc3.type = 'triangle';
+      osc3.frequency.value = 1046.5; // C6
       const osc4 = audioCtx.createOscillator();
-      osc4.type = 'square';
-      osc4.frequency.value = 1108.7; // C#6
+      osc4.type = 'sine';
+      osc4.frequency.value = 1318.5; // E6
 
       const gain2 = audioCtx.createGain();
-      gain2.gain.setValueAtTime(0, now + 0.45);
-      gain2.gain.linearRampToValueAtTime(0.7, now + 0.46);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+      gain2.gain.setValueAtTime(0, now + 0.55);
+      gain2.gain.linearRampToValueAtTime(0.7, now + 0.56);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
 
       osc3.connect(gain2);
       osc4.connect(gain2);
       gain2.connect(masterGain);
 
-      osc3.start(now + 0.45);
-      osc4.start(now + 0.45);
-      osc3.stop(now + 0.9);
-      osc4.stop(now + 0.9);
+      osc3.start(now + 0.55);
+      osc4.start(now + 0.55);
+      osc3.stop(now + 1.5);
+      osc4.stop(now + 1.5);
 
       soundSource = { osc1, osc2, osc3, osc4, gain1, gain2, masterGain };
     }
@@ -572,7 +553,6 @@
       }
     }
 
-    // ---------- CENTER TOAST (30 sec) ----------
     function showCenterToast(name, team) {
       if (toastTimeout) clearTimeout(toastTimeout);
       toastMain.textContent = `${name} · ${team}`;
@@ -583,8 +563,7 @@
       }, TOAST_DURATION);
     }
 
-    // ---------- TICKER ----------
-    function updateTicker(message, isSale = true) {
+    function updateTicker(message) {
       const item = document.createElement('div');
       item.className = 'ticker-item';
       item.textContent = message;
@@ -592,7 +571,6 @@
       tickerContent.appendChild(item);
     }
 
-    // ---------- CELEBRATION (confetti) ----------
     function startConfetti() {
       const end = Date.now() + CELEBRATION_DURATION;
       const frame = () => {
@@ -605,7 +583,6 @@
       setTimeout(() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }), 200);
     }
 
-    // ---------- QUEUE PROCESSOR ----------
     function processQueue() {
       if (isCelebrating || celebrationQueue.length === 0) return;
       
@@ -614,7 +591,7 @@
 
       showCenterToast(event.name, event.team);
       updateTicker(`${event.name} · ${event.team}  +${event.diff} sale`);
-      playLoudDoubleChime();
+      playLoudBell();
       startConfetti();
       
       bellaCounter.classList.add('pop');
@@ -635,7 +612,6 @@
       if (!isCelebrating) processQueue();
     }
 
-    // ---------- DETECT CHANGES ----------
     function detectSales(newData) {
       if (!previousData) return;
       const sales = [];
@@ -661,7 +637,6 @@
       }
     }
 
-    // ---------- RENDER UI ----------
     function render(data) {
       bellaName.textContent = data.bella.name;
       cassieName.textContent = data.cassie.name;
@@ -695,7 +670,6 @@
       }
     }
 
-    // ---------- INIT ----------
     function init() {
       fetchData();
       setInterval(fetchData, POLL_INTERVAL);
