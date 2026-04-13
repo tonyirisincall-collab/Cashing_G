@@ -301,7 +301,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Center toast */
+    /* Center toast – shared styles */
     .center-toast {
       position: fixed;
       top: 50%;
@@ -318,6 +318,7 @@
       transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
       pointer-events: none;
       text-align: center;
+      min-width: 320px;
     }
     body.light .center-toast {
       background: #ffffffec;
@@ -333,6 +334,7 @@
       font-weight: 600;
       color: white;
       text-shadow: 0 0 20px #aad0ff;
+      line-height: 1.3;
     }
     body.light .toast-text {
       color: #0a1a2b;
@@ -345,10 +347,9 @@
     }
     body.light .toast-sub { color: #2a4a7a; }
 
-    /* R2 specific toast styling – can be same or different */
-    .center-toast.r2-toast {
-      border-color: #ffaa33;
-      box-shadow: 0 20px 40px #00000060, 0 0 60px #ffb34780;
+    /* R2 toast – only the message, no heading */
+    .r2-toast .toast-text {
+      font-size: 2.5rem; /* slightly larger for emphasis */
     }
 
     .audio-hint {
@@ -361,7 +362,7 @@
     @media (max-width: 800px) {
       .counters-grid { grid-template-columns: 1fr; }
       .counter-value { font-size: 6rem; }
-      .toast-text { font-size: 1.6rem; }
+      .toast-text { font-size: 1.8rem; }
     }
   </style>
 </head>
@@ -427,29 +428,30 @@
   </div>
 </div>
 
-<!-- Center Toast for Sales -->
+<!-- Sale Toast -->
 <div class="center-toast" id="centerToast">
   <div class="toast-text" id="toastMain">Sale!</div>
   <div class="toast-sub" id="toastSub"></div>
 </div>
 
-<!-- Separate Toast for R2 messages -->
+<!-- R2 Message Toast (only the message, large) -->
 <div class="center-toast r2-toast" id="r2Toast">
-  <div class="toast-text" id="r2ToastMain">📢 Announcement</div>
-  <div class="toast-sub" id="r2ToastSub"></div>
+  <div class="toast-text" id="r2ToastMessage">Message</div>
 </div>
 
 <script>
   (function(){
     "use strict";
 
+    // ======================== CONFIG ========================
     const API_URL = 'https://script.google.com/macros/s/AKfycbwf1auwHmR3RPGRSxxYzwl1-N2eyI8WOP99DagjN7qPDWZxm8QR97m7ClxNcLer6fXq/exec';
     const POLL_INTERVAL = 5000;
-    const CELEBRATION_DURATION = 30000;
-    const TOAST_DURATION = 30000;
-    const R2_TOAST_DURATION = 15000; // 15 seconds
-    const QUEUE_GAP = 30000;
+    const CELEBRATION_DURATION = 30000;      // 30 sec confetti
+    const SALE_TOAST_DURATION = 30000;       // 30 sec for sale toast
+    const R2_TOAST_DURATION = 15000;         // 15 sec for R2 message
+    const QUEUE_GAP = 30000;                 // 30 sec between queued sales
 
+    // ======================== STATE ========================
     let previousData = null;
     let audioCtx = null;
     let audioAllowed = false;
@@ -457,10 +459,10 @@
     let isCelebrating = false;
     let celebrationTimer = null;
     let soundSource = null;
-    let toastTimeout = null;
+    let saleToastTimeout = null;
     let r2ToastTimeout = null;
 
-    // DOM
+    // DOM elements
     const bellaName = document.getElementById('bellaName');
     const bellaCounter = document.getElementById('bellaCounter');
     const bellaMembers = document.getElementById('bellaMembers');
@@ -475,17 +477,17 @@
     const toastMain = document.getElementById('toastMain');
     const toastSub = document.getElementById('toastSub');
     const r2Toast = document.getElementById('r2Toast');
-    const r2ToastMain = document.getElementById('r2ToastMain');
-    const r2ToastSub = document.getElementById('r2ToastSub');
+    const r2ToastMessage = document.getElementById('r2ToastMessage');
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
 
+    // Theme toggle
     themeToggle.addEventListener('click', () => {
       body.classList.toggle('light');
       body.classList.toggle('dark');
     });
 
-    // ---------- AUDIO ----------
+    // ======================== AUDIO ========================
     function initAudio() {
       if (audioCtx) return true;
       try {
@@ -505,7 +507,19 @@
       updateTicker('Audio enabled', false);
     }
 
-    // Sale sound – loud bell (10 seconds)
+    function stopSound() {
+      if (soundSource) {
+        try {
+          if (soundSource.osc1) soundSource.osc1.stop();
+          if (soundSource.osc2) soundSource.osc2.stop();
+          if (soundSource.osc3) soundSource.osc3.stop();
+          if (soundSource.osc4) soundSource.osc4.stop();
+        } catch(e) {}
+        soundSource = null;
+      }
+    }
+
+    // Sale sound – loud 10‑second bell
     function playSaleSound() {
       if (!audioAllowed || !audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -556,7 +570,7 @@
       soundSource = { osc1, osc2, osc3, osc4, gain1, gain2, masterGain };
     }
 
-    // R2 notification sound – distinct double ding (shorter, higher pitch)
+    // R2 notification sound – distinct double ding
     function playR2Sound() {
       if (!audioAllowed || !audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -567,10 +581,9 @@
       masterGain.gain.setValueAtTime(0.5, now);
       masterGain.connect(audioCtx.destination);
 
-      // First ding
       const osc1 = audioCtx.createOscillator();
       osc1.type = 'sine';
-      osc1.frequency.value = 2093.0; // C7
+      osc1.frequency.value = 2093.0;
       const gain1 = audioCtx.createGain();
       gain1.gain.setValueAtTime(0.6, now);
       gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
@@ -578,10 +591,9 @@
       osc1.start();
       osc1.stop(now + 0.35);
 
-      // Second ding (slightly later)
       const osc2 = audioCtx.createOscillator();
       osc2.type = 'sine';
-      osc2.frequency.value = 2637.0; // E7
+      osc2.frequency.value = 2637.0;
       const gain2 = audioCtx.createGain();
       gain2.gain.setValueAtTime(0, now + 0.4);
       gain2.gain.linearRampToValueAtTime(0.6, now + 0.41);
@@ -593,40 +605,27 @@
       soundSource = { osc1, osc2, gain1, gain2, masterGain };
     }
 
-    function stopSound() {
-      if (soundSource) {
-        try {
-          if (soundSource.osc1) soundSource.osc1.stop();
-          if (soundSource.osc2) soundSource.osc2.stop();
-          if (soundSource.osc3) soundSource.osc3.stop();
-          if (soundSource.osc4) soundSource.osc4.stop();
-        } catch(e) {}
-        soundSource = null;
-      }
-    }
-
-    // ---------- TOASTS ----------
+    // ======================== TOASTS ========================
     function showSaleToast(name, team) {
-      if (toastTimeout) clearTimeout(toastTimeout);
+      if (saleToastTimeout) clearTimeout(saleToastTimeout);
       toastMain.textContent = `${name} · ${team}`;
       toastSub.textContent = 'Got a DO!';
       centerToast.classList.add('show');
-      toastTimeout = setTimeout(() => {
+      saleToastTimeout = setTimeout(() => {
         centerToast.classList.remove('show');
-      }, TOAST_DURATION);
+      }, SALE_TOAST_DURATION);
     }
 
     function showR2Toast(message) {
       if (r2ToastTimeout) clearTimeout(r2ToastTimeout);
-      r2ToastMain.textContent = '📢 Announcement';
-      r2ToastSub.textContent = message;
+      r2ToastMessage.textContent = message;
       r2Toast.classList.add('show');
       r2ToastTimeout = setTimeout(() => {
         r2Toast.classList.remove('show');
       }, R2_TOAST_DURATION);
     }
 
-    // ---------- TICKER ----------
+    // ======================== TICKER ========================
     function updateTicker(message) {
       const item = document.createElement('div');
       item.className = 'ticker-item';
@@ -635,7 +634,7 @@
       tickerContent.appendChild(item);
     }
 
-    // ---------- CONFETTI ----------
+    // ======================== CONFETTI ========================
     function startConfetti() {
       const end = Date.now() + CELEBRATION_DURATION;
       const frame = () => {
@@ -648,7 +647,7 @@
       setTimeout(() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }), 200);
     }
 
-    // ---------- QUEUE ----------
+    // ======================== QUEUE ========================
     function processQueue() {
       if (isCelebrating || celebrationQueue.length === 0) return;
       
@@ -678,7 +677,7 @@
       if (!isCelebrating) processQueue();
     }
 
-    // ---------- CHANGE DETECTION ----------
+    // ======================== CHANGE DETECTION ========================
     function detectChanges(newData) {
       if (!previousData) return;
 
@@ -710,11 +709,11 @@
       if (newR2 !== prevR2 && newR2.trim() !== '') {
         showR2Toast(newR2);
         playR2Sound();
-        updateTicker(`📢 Announcement: ${newR2}`);
+        updateTicker(`📢 ${newR2}`);
       }
     }
 
-    // ---------- RENDER ----------
+    // ======================== RENDER ========================
     function render(data) {
       bellaName.textContent = data.bella.name;
       cassieName.textContent = data.cassie.name;
@@ -727,6 +726,7 @@
         `<div class="member-tag">${m.name} <strong>${m.value}</strong></div>`).join('');
     }
 
+    // ======================== FETCH ========================
     async function fetchData() {
       try {
         const res = await fetch(API_URL);
@@ -748,7 +748,7 @@
       }
     }
 
-    // ---------- INIT ----------
+    // ======================== INIT ========================
     function init() {
       fetchData();
       setInterval(fetchData, POLL_INTERVAL);
