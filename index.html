@@ -4,9 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sales Race · Live</title>
+  <!-- Favicon (SVG trophy) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFD700'%3E%3Cpath d='M12 2L15 9H22L16 14L19 21L12 16.5L5 21L8 14L2 9H9L12 2Z'/%3E%3C/svg%3E">
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <!-- Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
   <style>
     * {
@@ -17,31 +21,43 @@
 
     body {
       font-family: "Inter", sans-serif;
-      background: #050a12;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
-      color: #ffffff;
+      transition: background 0.3s, color 0.2s;
       position: relative;
       overflow-x: hidden;
     }
 
-    /* Animated background orbs */
+    /* Light / Dark themes */
+    body.light {
+      background: #f5f9ff;
+      color: #0a1a2b;
+    }
+    body.dark {
+      background: #050a12;
+      color: #ffffff;
+    }
+
+    /* Animated background orbs (only visible in dark mode) */
     .bg-orb {
       position: fixed;
       width: 60vmax;
       height: 60vmax;
       border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, rgba(30, 100, 200, 0.15), transparent 70%);
       filter: blur(80px);
       z-index: -1;
       animation: floatOrb 25s infinite alternate ease-in-out;
+      opacity: 0;
+      transition: opacity 0.3s;
     }
+    body.dark .bg-orb { opacity: 1; }
+    body.light .bg-orb { opacity: 0; }
 
-    .orb1 { top: -20vh; left: -10vw; background: radial-gradient(circle, #1e4b8a20, #050a1200); }
-    .orb2 { bottom: -10vh; right: -5vw; background: radial-gradient(circle, #9b4dff20, #050a1200); animation-duration: 30s; }
+    .orb1 { top: -20vh; left: -10vw; background: radial-gradient(circle, #1e4b8a30, #050a1200); }
+    .orb2 { bottom: -10vh; right: -5vw; background: radial-gradient(circle, #9b4dff30, #050a1200); animation-duration: 30s; }
 
     @keyframes floatOrb {
       0% { transform: translate(0, 0) scale(1); }
@@ -55,12 +71,13 @@
       z-index: 5;
     }
 
-    /* Top bar – minimal */
+    /* Top bar */
     .top-bar {
       display: flex;
       justify-content: flex-end;
       align-items: center;
       margin-bottom: 24px;
+      gap: 12px;
     }
 
     .status-chip {
@@ -76,6 +93,11 @@
       font-size: 0.9rem;
       font-weight: 500;
       color: #b0d5ff;
+    }
+    body.light .status-chip {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: #3a8cff30;
+      color: #1a3a5e;
     }
 
     .live-dot {
@@ -105,18 +127,31 @@
       cursor: pointer;
       transition: all 0.2s;
       color: #c6dcff;
-      margin-left: 16px;
+    }
+    body.light .icon-btn {
+      background: rgba(255,255,255,0.8);
+      border-color: #c0d4f0;
+      color: #1e3a5f;
     }
     .icon-btn:hover {
       background: #1e3a5f;
       border-color: #3a8cff;
       color: white;
     }
+    body.light .icon-btn:hover {
+      background: #d0e2ff;
+      color: #0a1a2b;
+    }
     .icon-btn svg {
       width: 22px;
       height: 22px;
       stroke: currentColor;
       stroke-width: 2;
+      fill: none;
+    }
+
+    /* Theme toggle specific */
+    #themeToggle svg {
       fill: none;
     }
 
@@ -136,7 +171,12 @@
       border-radius: 56px;
       padding: 40px 32px;
       box-shadow: 0 30px 50px -15px #00000080, inset 0 0 0 1px #ffffff08;
-      transition: transform 0.3s ease, border-color 0.2s;
+      transition: transform 0.3s ease, border-color 0.2s, background 0.3s;
+    }
+    body.light .team-card {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: #c0d4f0;
+      box-shadow: 0 20px 40px -10px #00000020, inset 0 0 0 1px #ffffff80;
     }
     .team-card:hover {
       border-color: #2f6eb080;
@@ -154,6 +194,8 @@
       height: 34px;
       stroke: #80b4ff;
     }
+    body.light .team-header svg { stroke: #1e4f9e; }
+
     .team-name {
       font-size: 2.5rem;
       font-weight: 600;
@@ -162,6 +204,11 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+    }
+    body.light .team-name {
+      background: linear-gradient(135deg, #0a1a2b, #1e4f9e);
+      -webkit-background-clip: text;
+      background-clip: text;
     }
 
     .counter-value {
@@ -174,6 +221,10 @@
       margin-bottom: 24px;
       font-feature-settings: "tnum";
       transition: text-shadow 0.2s;
+    }
+    body.light .counter-value {
+      color: #0a1a2b;
+      text-shadow: 0 0 20px #3a8cff40, 0 0 40px #1e4f9e20;
     }
     .counter-value.pop {
       animation: numberPop 0.4s cubic-bezier(0.2,0.9,0.4,1.2);
@@ -191,6 +242,7 @@
       border-top: 1px solid #ffffff10;
       padding-top: 28px;
     }
+    body.light .member-strip { border-top-color: #b0c8e0; }
 
     .member-tag {
       background: #ffffff08;
@@ -205,12 +257,18 @@
       align-items: center;
       gap: 12px;
     }
+    body.light .member-tag {
+      background: #ffffffb0;
+      border-color: #b8d0f0;
+      color: #0a1a2b;
+    }
     .member-tag strong {
       font-weight: 650;
       color: #f9e57c;
     }
+    body.light .member-tag strong { color: #c47a1a; }
 
-    /* Ticker (replaces activity feed) */
+    /* Ticker */
     .ticker-wrap {
       background: #0b1622b0;
       backdrop-filter: blur(16px);
@@ -222,11 +280,16 @@
       align-items: center;
       gap: 16px;
     }
+    body.light .ticker-wrap {
+      background: #ffffffc0;
+      border-color: #b8d0f0;
+    }
     .ticker-icon svg {
       width: 24px;
       height: 24px;
       stroke: #6ea8fe;
     }
+    body.light .ticker-icon svg { stroke: #1e4f9e; }
     .ticker-content {
       flex: 1;
       overflow: hidden;
@@ -242,12 +305,13 @@
       white-space: nowrap;
       animation: tickerSlide 0.4s ease;
     }
+    body.light .ticker-item { color: #0a1a2b; }
     @keyframes tickerSlide {
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Center toast notification */
+    /* Center toast – stays 30s */
     .center-toast {
       position: fixed;
       top: 50%;
@@ -261,14 +325,18 @@
       box-shadow: 0 20px 40px #00000060, 0 0 60px #3a8cff40;
       z-index: 999;
       opacity: 0;
-      transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
       pointer-events: none;
       text-align: center;
+    }
+    body.light .center-toast {
+      background: #ffffffec;
+      border-color: #3a8cff;
+      box-shadow: 0 20px 40px #00000020, 0 0 40px #3a8cff40;
     }
     .center-toast.show {
       opacity: 1;
       transform: translate(-50%, -50%);
-      pointer-events: none;
     }
     .toast-text {
       font-size: 2.2rem;
@@ -276,18 +344,23 @@
       color: white;
       text-shadow: 0 0 20px #aad0ff;
     }
+    body.light .toast-text {
+      color: #0a1a2b;
+      text-shadow: none;
+    }
     .toast-sub {
       font-size: 1.2rem;
       color: #bdd6ff;
       margin-top: 6px;
     }
+    body.light .toast-sub { color: #2a4a7a; }
 
-    /* Audio hint (small) */
     .audio-hint {
       margin-left: 12px;
       font-size: 0.85rem;
       color: #99b8e0;
     }
+    body.light .audio-hint { color: #1e3a5f; }
 
     @media (max-width: 800px) {
       .counters-grid { grid-template-columns: 1fr; }
@@ -296,7 +369,7 @@
     }
   </style>
 </head>
-<body>
+<body class="dark">
 <div class="bg-orb orb1"></div>
 <div class="bg-orb orb2"></div>
 
@@ -311,6 +384,12 @@
         <path d="M3 10V14H7L12 19V5L7 10H3Z" />
         <path d="M16 8.5C17.3333 10 17.3333 14 16 15.5" />
         <path d="M19 5C22 9 22 15 19 19" />
+      </svg>
+    </div>
+    <div class="icon-btn" id="themeToggle" title="Toggle light/dark mode">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3V4M12 20V21M21 12H20M4 12H3M18.364 5.636L17.657 6.343M6.343 17.657L5.636 18.364M18.364 18.364L17.657 17.657M6.343 6.343L5.636 5.636" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
       </svg>
     </div>
   </div>
@@ -341,7 +420,7 @@
     </div>
   </div>
 
-  <!-- Ticker (replaces activity feed) -->
+  <!-- Ticker -->
   <div class="ticker-wrap">
     <div class="ticker-icon">
       <svg viewBox="0 0 24 24">
@@ -366,17 +445,18 @@
     "use strict";
 
     // ---------- CONFIG ----------
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzgXt4BCmxZjC3VzZ5x3FRVmMsH0KhuMhE4bVjtsqjf5M7Zsof8Qw4nIm0higVWNb5O/exec'; // ⬅️ PASTE HERE
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzgXt4BCmxZjC3VzZ5x3FRVmMsH0KhuMhE4bVjtsqjf5M7Zsof8Qw4nIm0higVWNb5O/exec';
     const POLL_INTERVAL = 5000;
     const CELEBRATION_DURATION = 30000;       // 30 sec
-    const SOUND_DURATION = 5000;              // 5 sec
+    const TOAST_DURATION = 30000;             // 30 sec toast
+    const SOUND_DURATION = 5000;              // 5 sec (sound envelope)
     const QUEUE_GAP = 30000;                  // 30 sec between queued celebrations
 
     // State
     let previousData = null;
     let audioCtx = null;
     let audioAllowed = false;
-    let celebrationQueue = [];                 // array of sale events to process
+    let celebrationQueue = [];
     let isCelebrating = false;
     let celebrationTimer = null;
     let soundSource = null;
@@ -396,8 +476,21 @@
     const centerToast = document.getElementById('centerToast');
     const toastMain = document.getElementById('toastMain');
     const toastSub = document.getElementById('toastSub');
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
 
-    // ---------- AUDIO (LOUDER) ----------
+    // ---------- THEME TOGGLE ----------
+    themeToggle.addEventListener('click', () => {
+      if (body.classList.contains('dark')) {
+        body.classList.remove('dark');
+        body.classList.add('light');
+      } else {
+        body.classList.remove('light');
+        body.classList.add('dark');
+      }
+    });
+
+    // ---------- AUDIO (Double Ting-Ting) ----------
     function initAudio() {
       if (audioCtx) return true;
       try {
@@ -417,20 +510,20 @@
       updateTicker('Audio enabled', false);
     }
 
-    function playSaleSound() {
+    function playDoubleChime() {
       if (!audioAllowed || !audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       stopSound();
 
       const now = audioCtx.currentTime;
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.4, now); // louder
+      gain.gain.setValueAtTime(0.35, now);
       gain.connect(audioCtx.destination);
 
-      // Rich notification sound
+      // First chime (high)
       const osc1 = audioCtx.createOscillator();
       osc1.type = 'sine';
-      osc1.frequency.value = 1174.7; // D6
+      osc1.frequency.value = 1318.5; // E6
       const osc2 = audioCtx.createOscillator();
       osc2.type = 'triangle';
       osc2.frequency.value = 1568.0; // G6
@@ -440,23 +533,53 @@
       osc2.connect(merger, 0, 1);
       merger.connect(gain);
 
-      gain.gain.exponentialRampToValueAtTime(0.001, now + SOUND_DURATION/1000);
+      // Envelope: quick attack, decay
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      
       osc1.start();
       osc2.start();
-      osc1.stop(now + SOUND_DURATION/1000);
-      osc2.stop(now + SOUND_DURATION/1000);
-      soundSource = { osc1, osc2, gain };
+      osc1.stop(now + 0.2);
+      osc2.stop(now + 0.2);
+
+      // Second chime after 0.25s
+      const osc3 = audioCtx.createOscillator();
+      osc3.type = 'sine';
+      osc3.frequency.value = 1174.7; // D6
+      const osc4 = audioCtx.createOscillator();
+      osc4.type = 'triangle';
+      osc4.frequency.value = 1396.9; // F6
+
+      const gain2 = audioCtx.createGain();
+      gain2.gain.setValueAtTime(0, now + 0.25);
+      gain2.gain.linearRampToValueAtTime(0.3, now + 0.26);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+      gain2.connect(audioCtx.destination);
+
+      const merger2 = audioCtx.createChannelMerger(2);
+      osc3.connect(merger2, 0, 0);
+      osc4.connect(merger2, 0, 1);
+      merger2.connect(gain2);
+
+      osc3.start(now + 0.25);
+      osc4.start(now + 0.25);
+      osc3.stop(now + 0.5);
+      osc4.stop(now + 0.5);
+
+      soundSource = { osc1, osc2, osc3, osc4, gain, gain2 };
     }
 
     function stopSound() {
       if (soundSource) {
         try { soundSource.osc1.stop(); } catch(e) {}
         try { soundSource.osc2.stop(); } catch(e) {}
+        try { soundSource.osc3.stop(); } catch(e) {}
+        try { soundSource.osc4.stop(); } catch(e) {}
         soundSource = null;
       }
     }
 
-    // ---------- CENTER TOAST ----------
+    // ---------- CENTER TOAST (30 sec) ----------
     function showCenterToast(name, team) {
       if (toastTimeout) clearTimeout(toastTimeout);
       toastMain.textContent = `${name} · ${team}`;
@@ -464,10 +587,10 @@
       centerToast.classList.add('show');
       toastTimeout = setTimeout(() => {
         centerToast.classList.remove('show');
-      }, 4000);
+      }, TOAST_DURATION);
     }
 
-    // ---------- TICKER (replaces log) ----------
+    // ---------- TICKER ----------
     function updateTicker(message, isSale = true) {
       const item = document.createElement('div');
       item.className = 'ticker-item';
@@ -496,15 +619,11 @@
       const event = celebrationQueue.shift();
       isCelebrating = true;
 
-      // Show center toast
       showCenterToast(event.name, event.team);
-      // Update ticker
       updateTicker(`${event.name} · ${event.team}  +${event.diff} sale`);
-      // Sound & confetti
-      playSaleSound();
+      playDoubleChime();
       startConfetti();
       
-      // Pulse counters
       bellaCounter.classList.add('pop');
       cassieCounter.classList.add('pop');
       setTimeout(() => {
@@ -512,10 +631,9 @@
         cassieCounter.classList.remove('pop');
       }, 500);
 
-      // After celebration, wait QUEUE_GAP before next
       celebrationTimer = setTimeout(() => {
         isCelebrating = false;
-        processQueue(); // next in line
+        processQueue();
       }, QUEUE_GAP);
     }
 
@@ -586,10 +704,6 @@
 
     // ---------- INIT ----------
     function init() {
-      if (!API_URL.includes('https://script.google.com/macros/s/AKfycbzgXt4BCmxZjC3VzZ5x3FRVmMsH0KhuMhE4bVjtsqjf5M7Zsof8Qw4nIm0higVWNb5O/exec')) {
-        updateTicker('Error: Set API_URL in code', false);
-        return;
-      }
       fetchData();
       setInterval(fetchData, POLL_INTERVAL);
       
