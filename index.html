@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Team Sales · Live</title>
-  <!-- Modern Font -->
+  <title>Sales Race · Live</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-  <!-- Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
   <style>
     * {
@@ -18,65 +16,86 @@
     }
 
     body {
-      font-family: "Inter", system-ui, sans-serif;
-      background: radial-gradient(circle at 20% 30%, #0e1623, #03060b);
+      font-family: "Inter", sans-serif;
+      background: #050a12;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 2rem;
+      padding: 20px;
       color: #ffffff;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background orbs */
+    .bg-orb {
+      position: fixed;
+      width: 60vmax;
+      height: 60vmax;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(30, 100, 200, 0.15), transparent 70%);
+      filter: blur(80px);
+      z-index: -1;
+      animation: floatOrb 25s infinite alternate ease-in-out;
+    }
+
+    .orb1 { top: -20vh; left: -10vw; background: radial-gradient(circle, #1e4b8a20, #050a1200); }
+    .orb2 { bottom: -10vh; right: -5vw; background: radial-gradient(circle, #9b4dff20, #050a1200); animation-duration: 30s; }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(8vw, 6vh) scale(1.2); }
     }
 
     .dashboard {
-      max-width: 1440px;
+      max-width: 1400px;
       width: 100%;
+      position: relative;
+      z-index: 5;
     }
 
-    /* Top bar – subtle controls */
+    /* Top bar – minimal */
     .top-bar {
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      margin-bottom: 1.5rem;
-      gap: 16px;
+      margin-bottom: 24px;
     }
 
-    .live-indicator {
+    .status-chip {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(20, 30, 45, 0.6);
+      background: rgba(20, 30, 45, 0.5);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      padding: 6px 16px 6px 12px;
+      padding: 8px 18px;
       border-radius: 40px;
-      border: 1px solid rgba(0, 255, 200, 0.2);
+      border: 1px solid rgba(0, 200, 255, 0.15);
       font-size: 0.9rem;
       font-weight: 500;
-      letter-spacing: 0.3px;
-      color: #b0e0ff;
+      color: #b0d5ff;
     }
 
-    .pulse-dot {
+    .live-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
       background: #2effb0;
-      box-shadow: 0 0 12px #00ffb3;
-      animation: pulse-green 1.8s infinite;
+      box-shadow: 0 0 15px #00ffb3;
+      animation: pulse 1.5s infinite;
     }
 
-    @keyframes pulse-green {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.1); }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
     }
 
     .icon-btn {
       background: rgba(20, 30, 45, 0.5);
       backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: 40px;
       width: 44px;
       height: 44px;
@@ -84,28 +103,24 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
-      color: #ccddf8;
+      transition: all 0.2s;
+      color: #c6dcff;
+      margin-left: 16px;
     }
-
     .icon-btn:hover {
-      background: rgba(60, 90, 130, 0.6);
-      border-color: rgba(0, 200, 255, 0.3);
+      background: #1e3a5f;
+      border-color: #3a8cff;
       color: white;
-      transform: scale(1.02);
     }
-
     .icon-btn svg {
       width: 22px;
       height: 22px;
-      fill: none;
       stroke: currentColor;
       stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+      fill: none;
     }
 
-    /* Team Cards Grid */
+    /* Team cards */
     .counters-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -114,190 +129,184 @@
     }
 
     .team-card {
-      background: rgba(15, 25, 40, 0.45);
+      background: rgba(12, 22, 36, 0.5);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 48px;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 56px;
       padding: 40px 32px;
-      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-      transition: transform 0.25s ease, border-color 0.2s;
+      box-shadow: 0 30px 50px -15px #00000080, inset 0 0 0 1px #ffffff08;
+      transition: transform 0.3s ease, border-color 0.2s;
     }
-
     .team-card:hover {
-      border-color: rgba(80, 180, 255, 0.2);
-      transform: translateY(-4px);
+      border-color: #2f6eb080;
+      transform: translateY(-6px);
     }
 
     .team-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-
     .team-header svg {
-      width: 36px;
-      height: 36px;
-      stroke: #80c0ff;
-      stroke-width: 1.8;
+      width: 34px;
+      height: 34px;
+      stroke: #80b4ff;
     }
-
     .team-name {
-      font-size: 2.4rem;
+      font-size: 2.5rem;
       font-weight: 600;
       letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #ffffff, #c0d9ff);
+      background: linear-gradient(135deg, #ffffff, #b8d4ff);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
 
     .counter-value {
-      font-size: 8rem;
+      font-size: 8.5rem;
       font-weight: 700;
-      line-height: 1.1;
+      line-height: 1;
       letter-spacing: -0.03em;
       color: #ffffff;
-      text-shadow: 0 0 30px #3a8cff, 0 0 60px #1a4c9c;
+      text-shadow: 0 0 40px #2a7fff, 0 0 80px #1e4f9e;
       margin-bottom: 24px;
       font-feature-settings: "tnum";
       transition: text-shadow 0.2s;
     }
-
-    .counter-value.glow-pulse {
-      animation: numberPulse 0.5s cubic-bezier(0.2, 0.9, 0.4, 1);
+    .counter-value.pop {
+      animation: numberPop 0.4s cubic-bezier(0.2,0.9,0.4,1.2);
     }
-
-    @keyframes numberPulse {
-      0% { text-shadow: 0 0 30px #3a8cff, 0 0 60px #1a4c9c; transform: scale(1); }
-      50% { text-shadow: 0 0 60px #ffd966, 0 0 100px #ffaa33; transform: scale(1.02); }
-      100% { text-shadow: 0 0 30px #3a8cff, 0 0 60px #1a4c9c; transform: scale(1); }
+    @keyframes numberPop {
+      0% { text-shadow: 0 0 40px #2a7fff, 0 0 80px #1e4f9e; transform: scale(1); }
+      50% { text-shadow: 0 0 70px #ffd966, 0 0 120px #ffaa33; transform: scale(1.02); }
+      100% { text-shadow: 0 0 40px #2a7fff, 0 0 80px #1e4f9e; transform: scale(1); }
     }
 
     .member-strip {
       display: flex;
       flex-wrap: wrap;
       gap: 10px 18px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-top: 1px solid #ffffff10;
       padding-top: 28px;
     }
 
     .member-tag {
-      background: rgba(255, 255, 255, 0.03);
-      padding: 8px 18px;
-      border-radius: 60px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: #ffffff08;
+      padding: 8px 20px;
+      border-radius: 40px;
+      border: 1px solid #ffffff0c;
       font-size: 1.1rem;
       font-weight: 450;
-      color: #cddfff;
-      backdrop-filter: blur(5px);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .member-tag strong {
-      font-weight: 600;
-      color: #f2e57a;
-      margin-left: 4px;
-    }
-
-    /* Activity panel */
-    .activity-panel {
-      background: rgba(10, 18, 30, 0.5);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      border-radius: 36px;
-      padding: 24px 28px;
-    }
-
-    .activity-header {
+      color: #d3e4ff;
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 20px;
+    }
+    .member-tag strong {
+      font-weight: 650;
+      color: #f9e57c;
     }
 
-    .activity-header svg {
+    /* Ticker (replaces activity feed) */
+    .ticker-wrap {
+      background: #0b1622b0;
+      backdrop-filter: blur(16px);
+      border: 1px solid #ffffff0a;
+      border-radius: 50px;
+      padding: 12px 24px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .ticker-icon svg {
       width: 24px;
       height: 24px;
-      stroke: #7aaae0;
+      stroke: #6ea8fe;
+    }
+    .ticker-content {
+      flex: 1;
+      overflow: hidden;
+      height: 36px;
+      position: relative;
+    }
+    .ticker-item {
+      position: absolute;
+      width: 100%;
+      font-size: 1.2rem;
+      font-weight: 450;
+      color: #dfebff;
+      white-space: nowrap;
+      animation: tickerSlide 0.4s ease;
+    }
+    @keyframes tickerSlide {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .activity-header h3 {
-      font-weight: 500;
-      font-size: 1.3rem;
-      letter-spacing: -0.01em;
-      color: #d6e5ff;
+    /* Center toast notification */
+    .center-toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -70%);
+      background: #132236e0;
+      backdrop-filter: blur(30px);
+      border: 1px solid #5fa3ff80;
+      border-radius: 100px;
+      padding: 22px 48px;
+      box-shadow: 0 20px 40px #00000060, 0 0 60px #3a8cff40;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+      text-align: center;
+    }
+    .center-toast.show {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .toast-text {
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: white;
+      text-shadow: 0 0 20px #aad0ff;
+    }
+    .toast-sub {
+      font-size: 1.2rem;
+      color: #bdd6ff;
+      margin-top: 6px;
     }
 
-    #logContainer {
-      max-height: 180px;
-      overflow-y: auto;
-      padding-right: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .log-entry {
-      background: rgba(255, 255, 255, 0.02);
-      border-radius: 30px;
-      padding: 14px 22px;
-      border-left: 4px solid #4da6ff;
-      font-size: 1.1rem;
-      font-weight: 430;
-      color: #eaf0ff;
-      backdrop-filter: blur(4px);
-      animation: slideFade 0.3s ease;
-      border: 1px solid rgba(255, 255, 255, 0.02);
-      border-left-width: 4px;
-    }
-
-    @keyframes slideFade {
-      from { opacity: 0; transform: translateX(-8px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    /* Custom scroll */
-    #logContainer::-webkit-scrollbar {
-      width: 5px;
-    }
-    #logContainer::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    #logContainer::-webkit-scrollbar-thumb {
-      background: #2f4b70;
-      border-radius: 20px;
-    }
-
-    /* Audio status hint (subtle) */
+    /* Audio hint (small) */
     .audio-hint {
+      margin-left: 12px;
       font-size: 0.85rem;
-      color: #809ab3;
-      margin-left: 8px;
-      opacity: 0.8;
+      color: #99b8e0;
     }
 
-    /* Responsive */
     @media (max-width: 800px) {
       .counters-grid { grid-template-columns: 1fr; }
       .counter-value { font-size: 6rem; }
+      .toast-text { font-size: 1.6rem; }
     }
   </style>
 </head>
 <body>
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+
 <div class="dashboard">
-  <!-- Minimal top bar -->
   <div class="top-bar">
-    <div class="live-indicator">
-      <span class="pulse-dot"></span>
-      <span id="syncStatusText">LIVE</span>
+    <div class="status-chip">
+      <span class="live-dot"></span>
+      <span id="syncLabel">LIVE</span>
     </div>
-    <div class="icon-btn" id="audioToggleBtn" title="Enable sound notifications">
-      <!-- Speaker SVG (modern) -->
+    <div class="icon-btn" id="audioBtn" title="Enable sound">
       <svg viewBox="0 0 24 24">
         <path d="M3 10V14H7L12 19V5L7 10H3Z" />
         <path d="M16 8.5C17.3333 10 17.3333 14 16 15.5" />
@@ -306,12 +315,11 @@
     </div>
   </div>
 
-  <!-- Team cards -->
   <div class="counters-grid">
-    <!-- Bella's Team -->
-    <div class="team-card" id="bellaCard">
+    <!-- Bella Card -->
+    <div class="team-card">
       <div class="team-header">
-        <svg viewBox="0 0 24 24" fill="none">
+        <svg viewBox="0 0 24 24">
           <path d="M12 2L15 9H22L16 14L19 21L12 16.5L5 21L8 14L2 9H9L12 2Z" stroke="currentColor" stroke-linejoin="round"/>
         </svg>
         <div class="team-name" id="bellaName">Bella's Team</div>
@@ -319,11 +327,10 @@
       <div class="counter-value" id="bellaCounter">0</div>
       <div class="member-strip" id="bellaMembers"></div>
     </div>
-
-    <!-- Cassie's Team -->
-    <div class="team-card" id="cassieCard">
+    <!-- Cassie Card -->
+    <div class="team-card">
       <div class="team-header">
-        <svg viewBox="0 0 24 24" fill="none">
+        <svg viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
           <path d="M12 6V12L16 14" stroke="currentColor" stroke-linecap="round"/>
         </svg>
@@ -334,20 +341,24 @@
     </div>
   </div>
 
-  <!-- Activity log -->
-  <div class="activity-panel">
-    <div class="activity-header">
+  <!-- Ticker (replaces activity feed) -->
+  <div class="ticker-wrap">
+    <div class="ticker-icon">
       <svg viewBox="0 0 24 24">
         <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" stroke-width="2" fill="none"/>
       </svg>
-      <h3>Activity feed</h3>
-      <span style="flex:1"></span>
-      <span id="audioStateBadge" class="audio-hint"></span>
     </div>
-    <div id="logContainer">
-      <div class="log-entry">System ready — monitoring sales</div>
+    <div class="ticker-content" id="tickerContent">
+      <div class="ticker-item">— Monitoring sales —</div>
     </div>
+    <span class="audio-hint" id="audioStateHint"></span>
   </div>
+</div>
+
+<!-- Center Toast -->
+<div class="center-toast" id="centerToast">
+  <div class="toast-text" id="toastMain">Sale!</div>
+  <div class="toast-sub" id="toastSub"></div>
 </div>
 
 <script>
@@ -355,18 +366,21 @@
     "use strict";
 
     // ---------- CONFIG ----------
-    const API_URL = 'https://script.google.com/macros/s/AKfycbx5Hr-X-8EnSiYfyMh1QOtNMvugIOzZdOt356Tu2REdndcSO1R3gDyMGliOQSi2dCKY/exec'; // ⬅️ PASTE YOUR URL
-    const POLL_INTERVAL = 5000;            // 5 seconds
-    const CELEBRATION_DURATION = 30000;     // 30 sec
-    const SOUND_DURATION = 5000;            // 5 sec
+    const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL'; // ⬅️ PASTE HERE
+    const POLL_INTERVAL = 5000;
+    const CELEBRATION_DURATION = 30000;       // 30 sec
+    const SOUND_DURATION = 5000;              // 5 sec
+    const QUEUE_GAP = 30000;                  // 30 sec between queued celebrations
 
     // State
     let previousData = null;
     let audioCtx = null;
     let audioAllowed = false;
+    let celebrationQueue = [];                 // array of sale events to process
+    let isCelebrating = false;
     let celebrationTimer = null;
     let soundSource = null;
-    let soundTimeout = null;
+    let toastTimeout = null;
 
     // DOM
     const bellaName = document.getElementById('bellaName');
@@ -375,55 +389,51 @@
     const cassieName = document.getElementById('cassieName');
     const cassieCounter = document.getElementById('cassieCounter');
     const cassieMembers = document.getElementById('cassieMembers');
-    const logContainer = document.getElementById('logContainer');
-    const syncStatusText = document.getElementById('syncStatusText');
-    const audioStateBadge = document.getElementById('audioStateBadge');
-    const audioToggleBtn = document.getElementById('audioToggleBtn');
+    const tickerContent = document.getElementById('tickerContent');
+    const syncLabel = document.getElementById('syncLabel');
+    const audioBtn = document.getElementById('audioBtn');
+    const audioStateHint = document.getElementById('audioStateHint');
+    const centerToast = document.getElementById('centerToast');
+    const toastMain = document.getElementById('toastMain');
+    const toastSub = document.getElementById('toastSub');
 
-    // ---------- AUDIO (Web Audio) ----------
-    function initAudioContext() {
+    // ---------- AUDIO (LOUDER) ----------
+    function initAudio() {
       if (audioCtx) return true;
       try {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         return true;
       } catch (e) {
-        console.warn('Web Audio not supported');
         return false;
       }
     }
 
     async function enableAudio() {
-      if (!initAudioContext()) {
-        audioStateBadge.textContent = 'Not supported';
-        return;
-      }
-      if (audioCtx.state === 'suspended') {
-        await audioCtx.resume();
-      }
+      if (!initAudio()) return;
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
       audioAllowed = true;
-      audioStateBadge.textContent = 'Sound on';
-      audioToggleBtn.style.color = '#6ef0b0';
-      addLogEntry('Audio notifications enabled', false);
+      audioStateHint.textContent = 'Sound on';
+      audioBtn.style.color = '#6ef0b0';
+      updateTicker('Audio enabled', false);
     }
 
     function playSaleSound() {
       if (!audioAllowed || !audioCtx) return;
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       stopSound();
 
       const now = audioCtx.currentTime;
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.setValueAtTime(0.4, now); // louder
       gain.connect(audioCtx.destination);
 
+      // Rich notification sound
       const osc1 = audioCtx.createOscillator();
       osc1.type = 'sine';
-      osc1.frequency.value = 1046.5; // C6
+      osc1.frequency.value = 1174.7; // D6
       const osc2 = audioCtx.createOscillator();
       osc2.type = 'triangle';
-      osc2.frequency.value = 1318.5; // E6
+      osc2.frequency.value = 1568.0; // G6
 
       const merger = audioCtx.createChannelMerger(2);
       osc1.connect(merger, 0, 0);
@@ -431,14 +441,11 @@
       merger.connect(gain);
 
       gain.gain.exponentialRampToValueAtTime(0.001, now + SOUND_DURATION/1000);
-
       osc1.start();
       osc2.start();
       osc1.stop(now + SOUND_DURATION/1000);
       osc2.stop(now + SOUND_DURATION/1000);
-
-      soundSource = { osc1, osc2, gain, merger };
-      soundTimeout = setTimeout(() => { soundSource = null; }, SOUND_DURATION);
+      soundSource = { osc1, osc2, gain };
     }
 
     function stopSound() {
@@ -447,70 +454,104 @@
         try { soundSource.osc2.stop(); } catch(e) {}
         soundSource = null;
       }
-      if (soundTimeout) clearTimeout(soundTimeout);
+    }
+
+    // ---------- CENTER TOAST ----------
+    function showCenterToast(name, team) {
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastMain.textContent = `${name} · ${team}`;
+      toastSub.textContent = 'Just got a sale!';
+      centerToast.classList.add('show');
+      toastTimeout = setTimeout(() => {
+        centerToast.classList.remove('show');
+      }, 4000);
+    }
+
+    // ---------- TICKER (replaces log) ----------
+    function updateTicker(message, isSale = true) {
+      const item = document.createElement('div');
+      item.className = 'ticker-item';
+      item.textContent = message;
+      tickerContent.innerHTML = '';
+      tickerContent.appendChild(item);
     }
 
     // ---------- CELEBRATION (confetti) ----------
-    function startCelebration() {
-      if (celebrationTimer) clearTimeout(celebrationTimer);
-      
-      const endTime = Date.now() + CELEBRATION_DURATION;
+    function startConfetti() {
+      const end = Date.now() + CELEBRATION_DURATION;
       const frame = () => {
-        confetti({ particleCount: 2, angle: 60, spread: 50, origin: { x: 0, y: 0.7 }, colors: ['#4da6ff', '#ffd966', '#ffffff'] });
-        confetti({ particleCount: 2, angle: 120, spread: 50, origin: { x: 1, y: 0.7 }, colors: ['#4da6ff', '#ffd966', '#ffffff'] });
-        if (Date.now() < endTime) requestAnimationFrame(frame);
+        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: ['#4da6ff', '#ffd966', '#fff'] });
+        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: ['#4da6ff', '#ffd966', '#fff'] });
+        if (Date.now() < end) requestAnimationFrame(frame);
       };
       frame();
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-      setTimeout(() => confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } }), 150);
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      setTimeout(() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }), 200);
+    }
+
+    // ---------- QUEUE PROCESSOR ----------
+    function processQueue() {
+      if (isCelebrating || celebrationQueue.length === 0) return;
       
-      celebrationTimer = setTimeout(() => {}, CELEBRATION_DURATION);
+      const event = celebrationQueue.shift();
+      isCelebrating = true;
+
+      // Show center toast
+      showCenterToast(event.name, event.team);
+      // Update ticker
+      updateTicker(`${event.name} · ${event.team}  +${event.diff} sale`);
+      // Sound & confetti
+      playSaleSound();
+      startConfetti();
+      
+      // Pulse counters
+      bellaCounter.classList.add('pop');
+      cassieCounter.classList.add('pop');
+      setTimeout(() => {
+        bellaCounter.classList.remove('pop');
+        cassieCounter.classList.remove('pop');
+      }, 500);
+
+      // After celebration, wait QUEUE_GAP before next
+      celebrationTimer = setTimeout(() => {
+        isCelebrating = false;
+        processQueue(); // next in line
+      }, QUEUE_GAP);
     }
 
-    // ---------- LOG ----------
-    function addLogEntry(message, isImportant = true) {
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      entry.textContent = message;
-      logContainer.appendChild(entry);
-      if (logContainer.children.length > 15) {
-        logContainer.removeChild(logContainer.firstChild);
-      }
-      logContainer.scrollTop = logContainer.scrollHeight;
+    function enqueueSaleEvents(events) {
+      events.forEach(ev => celebrationQueue.push(ev));
+      if (!isCelebrating) processQueue();
     }
 
-    // ---------- DETECT SALES ----------
-    function detectChanges(newData) {
+    // ---------- DETECT CHANGES ----------
+    function detectSales(newData) {
       if (!previousData) return;
-      const changes = [];
+      const sales = [];
 
       const prevBella = new Map(previousData.bella.members.map(m => [m.name, m.value]));
       newData.bella.members.forEach(m => {
         const prev = prevBella.get(m.name) || 0;
-        if (m.value > prev) changes.push({ team: newData.bella.name, name: m.name, diff: m.value - prev });
+        if (m.value > prev) {
+          sales.push({ team: newData.bella.name, name: m.name, diff: m.value - prev });
+        }
       });
 
       const prevCassie = new Map(previousData.cassie.members.map(m => [m.name, m.value]));
       newData.cassie.members.forEach(m => {
         const prev = prevCassie.get(m.name) || 0;
-        if (m.value > prev) changes.push({ team: newData.cassie.name, name: m.name, diff: m.value - prev });
+        if (m.value > prev) {
+          sales.push({ team: newData.cassie.name, name: m.name, diff: m.value - prev });
+        }
       });
 
-      if (changes.length) {
-        startCelebration();
-        playSaleSound();
-        changes.forEach(c => addLogEntry(`${c.name} · ${c.team}  +${c.diff} sale`));
-        bellaCounter.classList.add('glow-pulse');
-        cassieCounter.classList.add('glow-pulse');
-        setTimeout(() => {
-          bellaCounter.classList.remove('glow-pulse');
-          cassieCounter.classList.remove('glow-pulse');
-        }, 600);
+      if (sales.length) {
+        enqueueSaleEvents(sales);
       }
     }
 
-    // ---------- RENDER ----------
-    function renderUI(data) {
+    // ---------- RENDER UI ----------
+    function render(data) {
       bellaName.textContent = data.bella.name;
       cassieName.textContent = data.cassie.name;
       bellaCounter.textContent = data.bella.total;
@@ -529,42 +570,32 @@
         const data = await res.json();
         
         if (!previousData) {
-          renderUI(data);
-          addLogEntry('Connection established', false);
+          render(data);
+          updateTicker('Dashboard connected', false);
         } else {
-          detectChanges(data);
-          renderUI(data);
+          detectSales(data);
+          render(data);
         }
         previousData = data;
-        syncStatusText.textContent = 'LIVE';
-      } catch (err) {
-        console.warn(err);
-        syncStatusText.textContent = 'RECONNECTING';
+        syncLabel.textContent = 'LIVE';
+      } catch (e) {
+        console.warn(e);
+        syncLabel.textContent = 'RECONNECT';
       }
     }
 
     // ---------- INIT ----------
     function init() {
-      if (!API_URL || API_URL.includes('YOUR_GOOGLE_APPS_SCRIPT')) {
-        addLogEntry('ERROR: Set API_URL in the code', false);
-        syncStatusText.textContent = 'SETUP';
+      if (!API_URL.includes('https://script.google.com/macros/s/AKfycbzgXt4BCmxZjC3VzZ5x3FRVmMsH0KhuMhE4bVjtsqjf5M7Zsof8Qw4nIm0higVWNb5O/exec')) {
+        updateTicker('Error: Set API_URL in code', false);
         return;
       }
-      
       fetchData();
       setInterval(fetchData, POLL_INTERVAL);
       
-      audioToggleBtn.addEventListener('click', async () => {
-        if (!audioAllowed) {
-          await enableAudio();
-        } else {
-          // Toggle off? Not needed, but could mute. Keep simple.
-        }
-      });
-      
-      // Pre-init audio context but user gesture required
-      initAudioContext();
-      audioStateBadge.textContent = 'Click speaker';
+      audioBtn.addEventListener('click', enableAudio);
+      initAudio();
+      audioStateHint.textContent = 'Click speaker';
     }
 
     init();
