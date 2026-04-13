@@ -556,7 +556,7 @@
     function showCenterToast(name, team) {
       if (toastTimeout) clearTimeout(toastTimeout);
       toastMain.textContent = `${name} · ${team}`;
-      toastSub.textContent = 'Just got a sale!';
+      toastSub.textContent = 'Just got a DO!';
       centerToast.classList.add('show');
       toastTimeout = setTimeout(() => {
         centerToast.classList.remove('show');
