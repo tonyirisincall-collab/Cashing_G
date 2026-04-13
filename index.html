@@ -484,7 +484,7 @@
       updateTicker('Audio enabled', false);
     }
 
-    // 🔔 LOUD BELL SOUND – impossible to miss
+    // 🔔 LOUD BELL – 10 SECONDS LONG
     function playLoudBell() {
       if (!audioAllowed || !audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -492,7 +492,7 @@
 
       const now = audioCtx.currentTime;
       const masterGain = audioCtx.createGain();
-      masterGain.gain.setValueAtTime(0.75, now);  // HIGH VOLUME
+      masterGain.gain.setValueAtTime(0.75, now);
       masterGain.connect(audioCtx.destination);
 
       // First bell strike (high)
@@ -505,7 +505,7 @@
 
       const gain1 = audioCtx.createGain();
       gain1.gain.setValueAtTime(0.9, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 10); // 10 seconds decay
 
       osc1.connect(gain1);
       osc2.connect(gain1);
@@ -513,10 +513,10 @@
 
       osc1.start();
       osc2.start();
-      osc1.stop(now + 0.9);
-      osc2.stop(now + 0.9);
+      osc1.stop(now + 10);
+      osc2.stop(now + 10);
 
-      // Second bell strike (lower, slightly delayed)
+      // Second bell strike (lower)
       const osc3 = audioCtx.createOscillator();
       osc3.type = 'triangle';
       osc3.frequency.value = 1046.5; // C6
@@ -527,7 +527,7 @@
       const gain2 = audioCtx.createGain();
       gain2.gain.setValueAtTime(0, now + 0.55);
       gain2.gain.linearRampToValueAtTime(0.7, now + 0.56);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 10); // 10 seconds decay
 
       osc3.connect(gain2);
       osc4.connect(gain2);
@@ -535,8 +535,8 @@
 
       osc3.start(now + 0.55);
       osc4.start(now + 0.55);
-      osc3.stop(now + 1.5);
-      osc4.stop(now + 1.5);
+      osc3.stop(now + 10);
+      osc4.stop(now + 10);
 
       soundSource = { osc1, osc2, osc3, osc4, gain1, gain2, masterGain };
     }
