@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Sales · Live</title>
+  <!-- Modern Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <!-- Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: radial-gradient(circle at 20% 30%, #0e1623, #03060b);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      color: #ffffff;
+    }
+
+    .dashboard {
+      max-width: 1440px;
+      width: 100%;
+    }
+
+    /* Top bar – subtle controls */
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 16px;
+    }
+
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(20, 30, 45, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 6px 16px 6px 12px;
+      border-radius: 40px;
+      border: 1px solid rgba(0, 255, 200, 0.2);
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      color: #b0e0ff;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #2effb0;
+      box-shadow: 0 0 12px #00ffb3;
+      animation: pulse-green 1.8s infinite;
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+
+    .icon-btn {
+      background: rgba(20, 30, 45, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 40px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #ccddf8;
+    }
+
+    .icon-btn:hover {
+      background: rgba(60, 90, 130, 0.6);
+      border-color: rgba(0, 200, 255, 0.3);
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .icon-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Team Cards Grid */
+    .counters-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .team-card {
+      background: rgba(15, 25, 40, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 48px;
+      padding: 40px 32px;
+      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      transition: transform 0.25s ease, border-color 0.2s;
+    }
+
+    .team-card:hover {
+      border-color: rgba(80, 180, 255, 0.2);
+      transform: translateY(-4px);
+    }
+
+    .team-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .team-header svg {
+      width: 36px;
+      height: 36px;
+      stroke: #80c0ff;
+      stroke-width: 1.8;
+    }
+
+    .team-name {
+      font-size: 2.4rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff, #c0d9ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .counter-value {
+      font-size: 8rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      text-shadow: 0 0 30px #3a8cff, 0 0 60px #1a4c9c;
+      margin-bottom: 24px;
+      font-feature-settings: "tnum";
+      transition: text-shadow 0.2s;
+    }
+
+    .counter-value.glow-pulse {
+      animation: numberPulse 0.5s cubic-bezier(0.2, 0.9, 0.4, 1);
+    }
+
+    @keyframes numberPulse {
+      0% { text-shadow: 0 0 30px #3a8cff, 0 0 60px #1a4c9c; transform: scale(1); }
+      50% { text-shadow: 0 0 60px #ffd966, 0 0 100px #ffaa33; transform: scale(1.02); }
+      100% { text-shadow: 0 0 30px #3a8cff, 0 0 60px #1a4c9c; transform: scale(1); }
+    }
+
+    .member-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 28px;
+    }
+
+    .member-tag {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 18px;
+      border-radius: 60px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 1.1rem;
+      font-weight: 450;
+      color: #cddfff;
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .member-tag strong {
+      font-weight: 600;
+      color: #f2e57a;
+      margin-left: 4px;
+    }
+
+    /* Activity panel */
+    .activity-panel {
+      background: rgba(10, 18, 30, 0.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 36px;
+      padding: 24px 28px;
+    }
+
+    .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .activity-header svg {
+      width: 24px;
+      height: 24px;
+      stroke: #7aaae0;
+    }
+
+    .activity-header h3 {
+      font-weight: 500;
+      font-size: 1.3rem;
+      letter-spacing: -0.01em;
+      color: #d6e5ff;
+    }
+
+    #logContainer {
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-entry {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 30px;
+      padding: 14px 22px;
+      border-left: 4px solid #4da6ff;
+      font-size: 1.1rem;
+      font-weight: 430;
+      color: #eaf0ff;
+      backdrop-filter: blur(4px);
+      animation: slideFade 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      border-left-width: 4px;
+    }
+
+    @keyframes slideFade {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Custom scroll */
+    #logContainer::-webkit-scrollbar {
+      width: 5px;
+    }
+    #logContainer::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #logContainer::-webkit-scrollbar-thumb {
+      background: #2f4b70;
+      border-radius: 20px;
+    }
+
+    /* Audio status hint (subtle) */
+    .audio-hint {
+      font-size: 0.85rem;
+      color: #809ab3;
+      margin-left: 8px;
+      opacity: 0.8;
+    }
+
+    /* Responsive */
+    @media (max-width: 800px) {
+      .counters-grid { grid-template-columns: 1fr; }
+      .counter-value { font-size: 6rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <!-- Minimal top bar -->
+  <div class="top-bar">
+    <div class="live-indicator">
+      <span class="pulse-dot"></span>
+      <span id="syncStatusText">LIVE</span>
+    </div>
+    <div class="icon-btn" id="audioToggleBtn" title="Enable sound notifications">
+      <!-- Speaker SVG (modern) -->
+      <svg viewBox="0 0 24 24">
+        <path d="M3 10V14H7L12 19V5L7 10H3Z" />
+        <path d="M16 8.5C17.3333 10 17.3333 14 16 15.5" />
+        <path d="M19 5C22 9 22 15 19 19" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Team cards -->
+  <div class="counters-grid">
+    <!-- Bella's Team -->
+    <div class="team-card" id="bellaCard">
+      <div class="team-header">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L15 9H22L16 14L19 21L12 16.5L5 21L8 14L2 9H9L12 2Z" stroke="currentColor" stroke-linejoin="round"/>
+        </svg>
+        <div class="team-name" id="bellaName">Bella's Team</div>
+      </div>
+      <div class="counter-value" id="bellaCounter">0</div>
+      <div class="member-strip" id="bellaMembers"></div>
+    </div>
+
+    <!-- Cassie's Team -->
+    <div class="team-card" id="cassieCard">
+      <div class="team-header">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M12 6V12L16 14" stroke="currentColor" stroke-linecap="round"/>
+        </svg>
+        <div class="team-name" id="cassieName">Cassie's Team</div>
+      </div>
+      <div class="counter-value" id="cassieCounter">0</div>
+      <div class="member-strip" id="cassieMembers"></div>
+    </div>
+  </div>
+
+  <!-- Activity log -->
+  <div class="activity-panel">
+    <div class="activity-header">
+      <svg viewBox="0 0 24 24">
+        <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" stroke-width="2" fill="none"/>
+      </svg>
+      <h3>Activity feed</h3>
+      <span style="flex:1"></span>
+      <span id="audioStateBadge" class="audio-hint"></span>
+    </div>
+    <div id="logContainer">
+      <div class="log-entry">System ready — monitoring sales</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // ---------- CONFIG ----------
+    const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL'; // ⬅️ PASTE YOUR URL
+    const POLL_INTERVAL = 5000;            // 5 seconds
+    const CELEBRATION_DURATION = 30000;     // 30 sec
+    const SOUND_DURATION = 5000;            // 5 sec
+
+    // State
+    let previousData = null;
+    let audioCtx = null;
+    let audioAllowed = false;
+    let celebrationTimer = null;
+    let soundSource = null;
+    let soundTimeout = null;
+
+    // DOM
+    const bellaName = document.getElementById('bellaName');
+    const bellaCounter = document.getElementById('bellaCounter');
+    const bellaMembers = document.getElementById('bellaMembers');
+    const cassieName = document.getElementById('cassieName');
+    const cassieCounter = document.getElementById('cassieCounter');
+    const cassieMembers = document.getElementById('cassieMembers');
+    const logContainer = document.getElementById('logContainer');
+    const syncStatusText = document.getElementById('syncStatusText');
+    const audioStateBadge = document.getElementById('audioStateBadge');
+    const audioToggleBtn = document.getElementById('audioToggleBtn');
+
+    // ---------- AUDIO (Web Audio) ----------
+    function initAudioContext() {
+      if (audioCtx) return true;
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return true;
+      } catch (e) {
+        console.warn('Web Audio not supported');
+        return false;
+      }
+    }
+
+    async function enableAudio() {
+      if (!initAudioContext()) {
+        audioStateBadge.textContent = 'Not supported';
+        return;
+      }
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+      audioAllowed = true;
+      audioStateBadge.textContent = 'Sound on';
+      audioToggleBtn.style.color = '#6ef0b0';
+      addLogEntry('Audio notifications enabled', false);
+    }
+
+    function playSaleSound() {
+      if (!audioAllowed || !audioCtx) return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      stopSound();
+
+      const now = audioCtx.currentTime;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.25, now);
+      gain.connect(audioCtx.destination);
+
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.value = 1046.5; // C6
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = 'triangle';
+      osc2.frequency.value = 1318.5; // E6
+
+      const merger = audioCtx.createChannelMerger(2);
+      osc1.connect(merger, 0, 0);
+      osc2.connect(merger, 0, 1);
+      merger.connect(gain);
+
+      gain.gain.exponentialRampToValueAtTime(0.001, now + SOUND_DURATION/1000);
+
+      osc1.start();
+      osc2.start();
+      osc1.stop(now + SOUND_DURATION/1000);
+      osc2.stop(now + SOUND_DURATION/1000);
+
+      soundSource = { osc1, osc2, gain, merger };
+      soundTimeout = setTimeout(() => { soundSource = null; }, SOUND_DURATION);
+    }
+
+    function stopSound() {
+      if (soundSource) {
+        try { soundSource.osc1.stop(); } catch(e) {}
+        try { soundSource.osc2.stop(); } catch(e) {}
+        soundSource = null;
+      }
+      if (soundTimeout) clearTimeout(soundTimeout);
+    }
+
+    // ---------- CELEBRATION (confetti) ----------
+    function startCelebration() {
+      if (celebrationTimer) clearTimeout(celebrationTimer);
+      
+      const endTime = Date.now() + CELEBRATION_DURATION;
+      const frame = () => {
+        confetti({ particleCount: 2, angle: 60, spread: 50, origin: { x: 0, y: 0.7 }, colors: ['#4da6ff', '#ffd966', '#ffffff'] });
+        confetti({ particleCount: 2, angle: 120, spread: 50, origin: { x: 1, y: 0.7 }, colors: ['#4da6ff', '#ffd966', '#ffffff'] });
+        if (Date.now() < endTime) requestAnimationFrame(frame);
+      };
+      frame();
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      setTimeout(() => confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } }), 150);
+      
+      celebrationTimer = setTimeout(() => {}, CELEBRATION_DURATION);
+    }
+
+    // ---------- LOG ----------
+    function addLogEntry(message, isImportant = true) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = message;
+      logContainer.appendChild(entry);
+      if (logContainer.children.length > 15) {
+        logContainer.removeChild(logContainer.firstChild);
+      }
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    // ---------- DETECT SALES ----------
+    function detectChanges(newData) {
+      if (!previousData) return;
+      const changes = [];
+
+      const prevBella = new Map(previousData.bella.members.map(m => [m.name, m.value]));
+      newData.bella.members.forEach(m => {
+        const prev = prevBella.get(m.name) || 0;
+        if (m.value > prev) changes.push({ team: newData.bella.name, name: m.name, diff: m.value - prev });
+      });
+
+      const prevCassie = new Map(previousData.cassie.members.map(m => [m.name, m.value]));
+      newData.cassie.members.forEach(m => {
+        const prev = prevCassie.get(m.name) || 0;
+        if (m.value > prev) changes.push({ team: newData.cassie.name, name: m.name, diff: m.value - prev });
+      });
+
+      if (changes.length) {
+        startCelebration();
+        playSaleSound();
+        changes.forEach(c => addLogEntry(`${c.name} · ${c.team}  +${c.diff} sale`));
+        bellaCounter.classList.add('glow-pulse');
+        cassieCounter.classList.add('glow-pulse');
+        setTimeout(() => {
+          bellaCounter.classList.remove('glow-pulse');
+          cassieCounter.classList.remove('glow-pulse');
+        }, 600);
+      }
+    }
+
+    // ---------- RENDER ----------
+    function renderUI(data) {
+      bellaName.textContent = data.bella.name;
+      cassieName.textContent = data.cassie.name;
+      bellaCounter.textContent = data.bella.total;
+      cassieCounter.textContent = data.cassie.total;
+
+      bellaMembers.innerHTML = data.bella.members.map(m => 
+        `<div class="member-tag">${m.name} <strong>${m.value}</strong></div>`).join('');
+      cassieMembers.innerHTML = data.cassie.members.map(m => 
+        `<div class="member-tag">${m.name} <strong>${m.value}</strong></div>`).join('');
+    }
+
+    async function fetchData() {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        
+        if (!previousData) {
+          renderUI(data);
+          addLogEntry('Connection established', false);
+        } else {
+          detectChanges(data);
+          renderUI(data);
+        }
+        previousData = data;
+        syncStatusText.textContent = 'LIVE';
+      } catch (err) {
+        console.warn(err);
+        syncStatusText.textContent = 'RECONNECTING';
+      }
+    }
+
+    // ---------- INIT ----------
+    function init() {
+      if (!API_URL || API_URL.includes('YOUR_GOOGLE_APPS_SCRIPT')) {
+        addLogEntry('ERROR: Set API_URL in the code', false);
+        syncStatusText.textContent = 'SETUP';
+        return;
+      }
+      
+      fetchData();
+      setInterval(fetchData, POLL_INTERVAL);
+      
+      audioToggleBtn.addEventListener('click', async () => {
+        if (!audioAllowed) {
+          await enableAudio();
+        } else {
+          // Toggle off? Not needed, but could mute. Keep simple.
+        }
+      });
+      
+      // Pre-init audio context but user gesture required
+      initAudioContext();
+      audioStateBadge.textContent = 'Click speaker';
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
