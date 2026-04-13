@@ -150,11 +150,6 @@
       fill: none;
     }
 
-    /* Theme toggle specific */
-    #themeToggle svg {
-      fill: none;
-    }
-
     /* Team cards */
     .counters-grid {
       display: grid;
@@ -449,7 +444,6 @@
     const POLL_INTERVAL = 5000;
     const CELEBRATION_DURATION = 30000;       // 30 sec
     const TOAST_DURATION = 30000;             // 30 sec toast
-    const SOUND_DURATION = 5000;              // 5 sec (sound envelope)
     const QUEUE_GAP = 30000;                  // 30 sec between queued celebrations
 
     // State
@@ -490,7 +484,7 @@
       }
     });
 
-    // ---------- AUDIO (Double Ting-Ting) ----------
+    // ---------- AUDIO (LOUDER, ATTENTION-GRABBING) ----------
     function initAudio() {
       if (audioCtx) return true;
       try {
@@ -510,71 +504,70 @@
       updateTicker('Audio enabled', false);
     }
 
-    function playDoubleChime() {
+    function playLoudDoubleChime() {
       if (!audioAllowed || !audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       stopSound();
 
       const now = audioCtx.currentTime;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.35, now);
-      gain.connect(audioCtx.destination);
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0.6, now);  // HIGH VOLUME
+      masterGain.connect(audioCtx.destination);
 
-      // First chime (high)
+      // First chime – bright and piercing
       const osc1 = audioCtx.createOscillator();
-      osc1.type = 'sine';
-      osc1.frequency.value = 1318.5; // E6
+      osc1.type = 'sawtooth';
+      osc1.frequency.value = 1046.5; // C6
       const osc2 = audioCtx.createOscillator();
-      osc2.type = 'triangle';
-      osc2.frequency.value = 1568.0; // G6
+      osc2.type = 'square';
+      osc2.frequency.value = 1318.5; // E6
 
-      const merger = audioCtx.createChannelMerger(2);
-      osc1.connect(merger, 0, 0);
-      osc2.connect(merger, 0, 1);
-      merger.connect(gain);
+      const gain1 = audioCtx.createGain();
+      gain1.gain.setValueAtTime(0.8, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
 
-      // Envelope: quick attack, decay
-      gain.gain.setValueAtTime(0.35, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-      
+      osc1.connect(gain1);
+      osc2.connect(gain1);
+      gain1.connect(masterGain);
+
       osc1.start();
       osc2.start();
-      osc1.stop(now + 0.2);
-      osc2.stop(now + 0.2);
+      osc1.stop(now + 0.4);
+      osc2.stop(now + 0.4);
 
-      // Second chime after 0.25s
+      // Second chime – slightly lower, still loud
       const osc3 = audioCtx.createOscillator();
-      osc3.type = 'sine';
-      osc3.frequency.value = 1174.7; // D6
+      osc3.type = 'sawtooth';
+      osc3.frequency.value = 880.0; // A5
       const osc4 = audioCtx.createOscillator();
-      osc4.type = 'triangle';
-      osc4.frequency.value = 1396.9; // F6
+      osc4.type = 'square';
+      osc4.frequency.value = 1108.7; // C#6
 
       const gain2 = audioCtx.createGain();
-      gain2.gain.setValueAtTime(0, now + 0.25);
-      gain2.gain.linearRampToValueAtTime(0.3, now + 0.26);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-      gain2.connect(audioCtx.destination);
+      gain2.gain.setValueAtTime(0, now + 0.45);
+      gain2.gain.linearRampToValueAtTime(0.7, now + 0.46);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
 
-      const merger2 = audioCtx.createChannelMerger(2);
-      osc3.connect(merger2, 0, 0);
-      osc4.connect(merger2, 0, 1);
-      merger2.connect(gain2);
+      osc3.connect(gain2);
+      osc4.connect(gain2);
+      gain2.connect(masterGain);
 
-      osc3.start(now + 0.25);
-      osc4.start(now + 0.25);
-      osc3.stop(now + 0.5);
-      osc4.stop(now + 0.5);
+      osc3.start(now + 0.45);
+      osc4.start(now + 0.45);
+      osc3.stop(now + 0.9);
+      osc4.stop(now + 0.9);
 
-      soundSource = { osc1, osc2, osc3, osc4, gain, gain2 };
+      soundSource = { osc1, osc2, osc3, osc4, gain1, gain2, masterGain };
     }
 
     function stopSound() {
       if (soundSource) {
-        try { soundSource.osc1.stop(); } catch(e) {}
-        try { soundSource.osc2.stop(); } catch(e) {}
-        try { soundSource.osc3.stop(); } catch(e) {}
-        try { soundSource.osc4.stop(); } catch(e) {}
+        try {
+          soundSource.osc1.stop();
+          soundSource.osc2.stop();
+          soundSource.osc3.stop();
+          soundSource.osc4.stop();
+        } catch(e) {}
         soundSource = null;
       }
     }
@@ -621,7 +614,7 @@
 
       showCenterToast(event.name, event.team);
       updateTicker(`${event.name} · ${event.team}  +${event.diff} sale`);
-      playDoubleChime();
+      playLoudDoubleChime();
       startConfetti();
       
       bellaCounter.classList.add('pop');
