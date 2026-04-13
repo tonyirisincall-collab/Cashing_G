@@ -301,6 +301,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Center toast */
     .center-toast {
       position: fixed;
       top: 50%;
@@ -343,6 +344,12 @@
       margin-top: 6px;
     }
     body.light .toast-sub { color: #2a4a7a; }
+
+    /* R2 specific toast styling – can be same or different */
+    .center-toast.r2-toast {
+      border-color: #ffaa33;
+      box-shadow: 0 20px 40px #00000060, 0 0 60px #ffb34780;
+    }
 
     .audio-hint {
       margin-left: 12px;
@@ -420,19 +427,27 @@
   </div>
 </div>
 
+<!-- Center Toast for Sales -->
 <div class="center-toast" id="centerToast">
   <div class="toast-text" id="toastMain">Sale!</div>
   <div class="toast-sub" id="toastSub"></div>
+</div>
+
+<!-- Separate Toast for R2 messages -->
+<div class="center-toast r2-toast" id="r2Toast">
+  <div class="toast-text" id="r2ToastMain">📢 Announcement</div>
+  <div class="toast-sub" id="r2ToastSub"></div>
 </div>
 
 <script>
   (function(){
     "use strict";
 
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzgXt4BCmxZjC3VzZ5x3FRVmMsH0KhuMhE4bVjtsqjf5M7Zsof8Qw4nIm0higVWNb5O/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwf1auwHmR3RPGRSxxYzwl1-N2eyI8WOP99DagjN7qPDWZxm8QR97m7ClxNcLer6fXq/exec';
     const POLL_INTERVAL = 5000;
     const CELEBRATION_DURATION = 30000;
     const TOAST_DURATION = 30000;
+    const R2_TOAST_DURATION = 15000; // 15 seconds
     const QUEUE_GAP = 30000;
 
     let previousData = null;
@@ -443,7 +458,9 @@
     let celebrationTimer = null;
     let soundSource = null;
     let toastTimeout = null;
+    let r2ToastTimeout = null;
 
+    // DOM
     const bellaName = document.getElementById('bellaName');
     const bellaCounter = document.getElementById('bellaCounter');
     const bellaMembers = document.getElementById('bellaMembers');
@@ -457,6 +474,9 @@
     const centerToast = document.getElementById('centerToast');
     const toastMain = document.getElementById('toastMain');
     const toastSub = document.getElementById('toastSub');
+    const r2Toast = document.getElementById('r2Toast');
+    const r2ToastMain = document.getElementById('r2ToastMain');
+    const r2ToastSub = document.getElementById('r2ToastSub');
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
 
@@ -465,6 +485,7 @@
       body.classList.toggle('dark');
     });
 
+    // ---------- AUDIO ----------
     function initAudio() {
       if (audioCtx) return true;
       try {
@@ -484,8 +505,8 @@
       updateTicker('Audio enabled', false);
     }
 
-    // 🔔 LOUD BELL – 10 SECONDS LONG
-    function playLoudBell() {
+    // Sale sound – loud bell (10 seconds)
+    function playSaleSound() {
       if (!audioAllowed || !audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       stopSound();
@@ -495,44 +516,38 @@
       masterGain.gain.setValueAtTime(0.75, now);
       masterGain.connect(audioCtx.destination);
 
-      // First bell strike (high)
       const osc1 = audioCtx.createOscillator();
       osc1.type = 'triangle';
-      osc1.frequency.value = 1396.9; // F6
+      osc1.frequency.value = 1396.9;
       const osc2 = audioCtx.createOscillator();
       osc2.type = 'sine';
-      osc2.frequency.value = 1760.0; // A6
+      osc2.frequency.value = 1760.0;
 
       const gain1 = audioCtx.createGain();
       gain1.gain.setValueAtTime(0.9, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 10); // 10 seconds decay
-
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 10);
       osc1.connect(gain1);
       osc2.connect(gain1);
       gain1.connect(masterGain);
-
       osc1.start();
       osc2.start();
       osc1.stop(now + 10);
       osc2.stop(now + 10);
 
-      // Second bell strike (lower)
       const osc3 = audioCtx.createOscillator();
       osc3.type = 'triangle';
-      osc3.frequency.value = 1046.5; // C6
+      osc3.frequency.value = 1046.5;
       const osc4 = audioCtx.createOscillator();
       osc4.type = 'sine';
-      osc4.frequency.value = 1318.5; // E6
+      osc4.frequency.value = 1318.5;
 
       const gain2 = audioCtx.createGain();
       gain2.gain.setValueAtTime(0, now + 0.55);
       gain2.gain.linearRampToValueAtTime(0.7, now + 0.56);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 10); // 10 seconds decay
-
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 10);
       osc3.connect(gain2);
       osc4.connect(gain2);
       gain2.connect(masterGain);
-
       osc3.start(now + 0.55);
       osc4.start(now + 0.55);
       osc3.stop(now + 10);
@@ -541,28 +556,77 @@
       soundSource = { osc1, osc2, osc3, osc4, gain1, gain2, masterGain };
     }
 
+    // R2 notification sound – distinct double ding (shorter, higher pitch)
+    function playR2Sound() {
+      if (!audioAllowed || !audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      stopSound();
+
+      const now = audioCtx.currentTime;
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0.5, now);
+      masterGain.connect(audioCtx.destination);
+
+      // First ding
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.value = 2093.0; // C7
+      const gain1 = audioCtx.createGain();
+      gain1.gain.setValueAtTime(0.6, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc1.connect(gain1).connect(masterGain);
+      osc1.start();
+      osc1.stop(now + 0.35);
+
+      // Second ding (slightly later)
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.value = 2637.0; // E7
+      const gain2 = audioCtx.createGain();
+      gain2.gain.setValueAtTime(0, now + 0.4);
+      gain2.gain.linearRampToValueAtTime(0.6, now + 0.41);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+      osc2.connect(gain2).connect(masterGain);
+      osc2.start(now + 0.4);
+      osc2.stop(now + 0.8);
+
+      soundSource = { osc1, osc2, gain1, gain2, masterGain };
+    }
+
     function stopSound() {
       if (soundSource) {
         try {
-          soundSource.osc1.stop();
-          soundSource.osc2.stop();
-          soundSource.osc3.stop();
-          soundSource.osc4.stop();
+          if (soundSource.osc1) soundSource.osc1.stop();
+          if (soundSource.osc2) soundSource.osc2.stop();
+          if (soundSource.osc3) soundSource.osc3.stop();
+          if (soundSource.osc4) soundSource.osc4.stop();
         } catch(e) {}
         soundSource = null;
       }
     }
 
-    function showCenterToast(name, team) {
+    // ---------- TOASTS ----------
+    function showSaleToast(name, team) {
       if (toastTimeout) clearTimeout(toastTimeout);
       toastMain.textContent = `${name} · ${team}`;
-      toastSub.textContent = 'Just got a DO!';
+      toastSub.textContent = 'Got a DO!';
       centerToast.classList.add('show');
       toastTimeout = setTimeout(() => {
         centerToast.classList.remove('show');
       }, TOAST_DURATION);
     }
 
+    function showR2Toast(message) {
+      if (r2ToastTimeout) clearTimeout(r2ToastTimeout);
+      r2ToastMain.textContent = '📢 Announcement';
+      r2ToastSub.textContent = message;
+      r2Toast.classList.add('show');
+      r2ToastTimeout = setTimeout(() => {
+        r2Toast.classList.remove('show');
+      }, R2_TOAST_DURATION);
+    }
+
+    // ---------- TICKER ----------
     function updateTicker(message) {
       const item = document.createElement('div');
       item.className = 'ticker-item';
@@ -571,6 +635,7 @@
       tickerContent.appendChild(item);
     }
 
+    // ---------- CONFETTI ----------
     function startConfetti() {
       const end = Date.now() + CELEBRATION_DURATION;
       const frame = () => {
@@ -583,15 +648,16 @@
       setTimeout(() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }), 200);
     }
 
+    // ---------- QUEUE ----------
     function processQueue() {
       if (isCelebrating || celebrationQueue.length === 0) return;
       
       const event = celebrationQueue.shift();
       isCelebrating = true;
 
-      showCenterToast(event.name, event.team);
-      updateTicker(`${event.name} · ${event.team}  +${event.diff} sale`);
-      playLoudBell();
+      showSaleToast(event.name, event.team);
+      updateTicker(`${event.name} · ${event.team}  +${event.diff} DO`);
+      playSaleSound();
       startConfetti();
       
       bellaCounter.classList.add('pop');
@@ -612,10 +678,12 @@
       if (!isCelebrating) processQueue();
     }
 
-    function detectSales(newData) {
+    // ---------- CHANGE DETECTION ----------
+    function detectChanges(newData) {
       if (!previousData) return;
-      const sales = [];
 
+      // Sales detection
+      const sales = [];
       const prevBella = new Map(previousData.bella.members.map(m => [m.name, m.value]));
       newData.bella.members.forEach(m => {
         const prev = prevBella.get(m.name) || 0;
@@ -635,8 +703,18 @@
       if (sales.length) {
         enqueueSaleEvents(sales);
       }
+
+      // R2 message detection
+      const prevR2 = previousData.r2Message || '';
+      const newR2 = newData.r2Message || '';
+      if (newR2 !== prevR2 && newR2.trim() !== '') {
+        showR2Toast(newR2);
+        playR2Sound();
+        updateTicker(`📢 Announcement: ${newR2}`);
+      }
     }
 
+    // ---------- RENDER ----------
     function render(data) {
       bellaName.textContent = data.bella.name;
       cassieName.textContent = data.cassie.name;
@@ -659,7 +737,7 @@
           render(data);
           updateTicker('Dashboard connected', false);
         } else {
-          detectSales(data);
+          detectChanges(data);
           render(data);
         }
         previousData = data;
@@ -670,6 +748,7 @@
       }
     }
 
+    // ---------- INIT ----------
     function init() {
       fetchData();
       setInterval(fetchData, POLL_INTERVAL);
