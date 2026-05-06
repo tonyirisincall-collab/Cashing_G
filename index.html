@@ -4,762 +4,781 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sales Race · Live</title>
-  <!-- Favicon (SVG trophy) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFD700'%3E%3Cpath d='M12 2L15 9H22L16 14L19 21L12 16.5L5 21L8 14L2 9H9L12 2Z'/%3E%3C/svg%3E">
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-  <!-- Confetti -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --bg:        #06080d;
+      --surface:   #0c1017;
+      --border:    rgba(255,255,255,0.07);
+      --accent:    #3d8bff;
+      --accent2:   #00e5c0;
+      --gold:      #f5c842;
+      --text:      #e8efff;
+      --muted:     #6b7a96;
+      --glow:      rgba(61,139,255,0.18);
+      --glow2:     rgba(0,229,192,0.12);
+      --card-bg:   rgba(255,255,255,0.03);
+      --red:       #ff4d6d;
     }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: "Inter", sans-serif;
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      transition: background 0.3s, color 0.2s;
-      position: relative;
       overflow-x: hidden;
-    }
-
-    body.light {
-      background: #f5f9ff;
-      color: #0a1a2b;
-    }
-    body.dark {
-      background: #050a12;
-      color: #ffffff;
-    }
-
-    .bg-orb {
-      position: fixed;
-      width: 60vmax;
-      height: 60vmax;
-      border-radius: 50%;
-      filter: blur(80px);
-      z-index: -1;
-      animation: floatOrb 25s infinite alternate ease-in-out;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    body.dark .bg-orb { opacity: 1; }
-    body.light .bg-orb { opacity: 0; }
-
-    .orb1 { top: -20vh; left: -10vw; background: radial-gradient(circle, #1e4b8a30, #050a1200); }
-    .orb2 { bottom: -10vh; right: -5vw; background: radial-gradient(circle, #9b4dff30, #050a1200); animation-duration: 30s; }
-
-    @keyframes floatOrb {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(8vw, 6vh) scale(1.2); }
-    }
-
-    .dashboard {
-      max-width: 1400px;
-      width: 100%;
       position: relative;
-      z-index: 5;
     }
 
-    .top-bar {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin-bottom: 24px;
-      gap: 12px;
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(61,139,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(61,139,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
     }
 
-    .status-chip {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(20, 30, 45, 0.5);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 8px 18px;
-      border-radius: 40px;
-      border: 1px solid rgba(0, 200, 255, 0.15);
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: #b0d5ff;
+    /* ── AMBIENT GLOW BLOBS ── */
+    .blob {
+      position: fixed; border-radius: 50%;
+      filter: blur(90px); z-index: 0; pointer-events: none;
+      animation: drift 28s infinite alternate ease-in-out;
     }
-    body.light .status-chip {
-      background: rgba(255, 255, 255, 0.7);
-      border-color: #3a8cff30;
-      color: #1a3a5e;
+    .blob1 {
+      width: 600px; height: 600px;
+      top: -200px; left: -150px;
+      background: radial-gradient(circle, rgba(61,139,255,0.12), transparent 70%);
     }
-
-    .live-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #2effb0;
-      box-shadow: 0 0 15px #00ffb3;
-      animation: pulse 1.5s infinite;
+    .blob2 {
+      width: 500px; height: 500px;
+      bottom: -150px; right: -100px;
+      background: radial-gradient(circle, rgba(0,229,192,0.1), transparent 70%);
+      animation-duration: 22s; animation-direction: alternate-reverse;
+    }
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.15); }
     }
 
-    @keyframes pulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(1.2); }
+    /* ── LAYOUT ── */
+    .shell {
+      position: relative; z-index: 5;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px 40px;
     }
 
-    .icon-btn {
-      background: rgba(20, 30, 45, 0.5);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 40px;
-      width: 44px;
-      height: 44px;
+    /* ── TOP BAR ── */
+    .topbar {
       display: flex;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: #c6dcff;
-    }
-    body.light .icon-btn {
-      background: rgba(255,255,255,0.8);
-      border-color: #c0d4f0;
-      color: #1e3a5f;
-    }
-    .icon-btn:hover {
-      background: #1e3a5f;
-      border-color: #3a8cff;
-      color: white;
-    }
-    body.light .icon-btn:hover {
-      background: #d0e2ff;
-      color: #0a1a2b;
-    }
-    .icon-btn svg {
-      width: 22px;
-      height: 22px;
-      stroke: currentColor;
-      stroke-width: 2;
-      fill: none;
-    }
-
-    .counters-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      justify-content: space-between;
       margin-bottom: 32px;
     }
 
-    .team-card {
-      background: rgba(12, 22, 36, 0.5);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 56px;
-      padding: 40px 32px;
-      box-shadow: 0 30px 50px -15px #00000080, inset 0 0 0 1px #ffffff08;
-      transition: transform 0.3s ease, border-color 0.2s, background 0.3s;
+    .brand {
+      display: flex; align-items: center; gap: 10px;
     }
-    body.light .team-card {
-      background: rgba(255, 255, 255, 0.7);
-      border-color: #c0d4f0;
-      box-shadow: 0 20px 40px -10px #00000020, inset 0 0 0 1px #ffffff80;
+    .brand-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 12px var(--accent2);
+      animation: blink 1.6s infinite;
     }
-    .team-card:hover {
-      border-color: #2f6eb080;
-      transform: translateY(-6px);
+    @keyframes blink {
+      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
     }
+    .brand-label {
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--accent2);
+    }
+    #syncLabel { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.1em; }
 
-    .team-header {
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .pill-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.8rem;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+    .pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .pill-btn svg {
+      width: 16px; height: 16px;
+      stroke: currentColor; stroke-width: 2; fill: none; flex-shrink: 0;
+    }
+    .pill-btn.active { color: var(--accent2); border-color: var(--accent2); }
+
+    /* ── STATS BOX (G1 / G2) ── */
+    .stats-bar {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .team-header svg {
-      width: 34px;
-      height: 34px;
-      stroke: #80b4ff;
-    }
-    body.light .team-header svg { stroke: #1e4f9e; }
-
-    .team-name {
-      font-size: 2.5rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #ffffff, #b8d4ff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    body.light .team-name {
-      background: linear-gradient(135deg, #0a1a2b, #1e4f9e);
-      -webkit-background-clip: text;
-      background-clip: text;
-    }
-
-    .counter-value {
-      font-size: 8.5rem;
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: -0.03em;
-      color: #ffffff;
-      text-shadow: 0 0 40px #2a7fff, 0 0 80px #1e4f9e;
+      gap: 16px;
       margin-bottom: 24px;
-      font-feature-settings: "tnum";
-      transition: text-shadow 0.2s;
     }
-    body.light .counter-value {
-      color: #0a1a2b;
-      text-shadow: 0 0 20px #3a8cff40, 0 0 40px #1e4f9e20;
+    .stat-card {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
     }
-    .counter-value.pop {
-      animation: numberPop 0.4s cubic-bezier(0.2,0.9,0.4,1.2);
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.3s;
     }
-    @keyframes numberPop {
-      0% { text-shadow: 0 0 40px #2a7fff, 0 0 80px #1e4f9e; transform: scale(1); }
-      50% { text-shadow: 0 0 70px #ffd966, 0 0 120px #ffaa33; transform: scale(1.02); }
-      100% { text-shadow: 0 0 40px #2a7fff, 0 0 80px #1e4f9e; transform: scale(1); }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-card:hover { border-color: rgba(61,139,255,0.25); }
+
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1;
+    }
+    .stat-value.is-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 2.4rem;
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(245,200,66,0.3);
+    }
+    .stat-value.pop {
+      animation: statPop 0.5s cubic-bezier(0.2,0.9,0.4,1.2);
+    }
+    @keyframes statPop {
+      50% { transform: scale(1.06); color: var(--gold); }
     }
 
-    .member-strip {
+    /* ── MAIN COUNTER CARD ── */
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 40px 44px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .main-card::after {
+      content: '';
+      position: absolute;
+      inset: 0; border-radius: 28px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--glow), transparent);
+      pointer-events: none;
+    }
+    .main-card.celebrate {
+      border-color: var(--gold);
+      box-shadow: 0 0 60px rgba(245,200,66,0.1), inset 0 0 40px rgba(245,200,66,0.04);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .team-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .team-name {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .total-badge {
+      background: rgba(61,139,255,0.12);
+      border: 1px solid rgba(61,139,255,0.2);
+      border-radius: 12px;
+      padding: 8px 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+
+    .counter-hero {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(6rem, 14vw, 10rem);
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      text-shadow: 0 0 60px var(--glow), 0 0 100px var(--glow);
+      margin: 16px 0 32px;
+      font-feature-settings: "tnum";
+      transition: all 0.2s;
+    }
+    .counter-hero.pop {
+      animation: heroPop 0.5s cubic-bezier(0.2,0.9,0.4,1.2);
+    }
+    @keyframes heroPop {
+      50% {
+        text-shadow: 0 0 80px rgba(245,200,66,0.5), 0 0 140px rgba(245,200,66,0.3);
+        transform: scale(1.015);
+      }
+    }
+
+    /* ── MEMBER TAGS ── */
+    .member-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px 18px;
-      border-top: 1px solid #ffffff10;
-      padding-top: 28px;
+      gap: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 26px;
     }
-    body.light .member-strip { border-top-color: #b0c8e0; }
-
     .member-tag {
-      background: #ffffff08;
-      padding: 8px 20px;
-      border-radius: 40px;
-      border: 1px solid #ffffff0c;
-      font-size: 1.1rem;
-      font-weight: 450;
-      color: #d3e4ff;
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 9px 20px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: all 0.2s;
     }
-    body.light .member-tag {
-      background: #ffffffb0;
-      border-color: #b8d0f0;
-      color: #0a1a2b;
+    .member-tag:hover {
+      background: rgba(61,139,255,0.08);
+      border-color: rgba(61,139,255,0.25);
     }
-    .member-tag strong {
-      font-weight: 650;
-      color: #f9e57c;
+    .member-tag .val {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--gold);
+      min-width: 1.5ch;
+      text-align: right;
     }
-    body.light .member-tag strong { color: #c47a1a; }
+    .member-tag.flash {
+      animation: tagFlash 0.6s ease;
+    }
+    @keyframes tagFlash {
+      30% {
+        background: rgba(245,200,66,0.15);
+        border-color: var(--gold);
+        transform: scale(1.04);
+      }
+    }
 
-    .ticker-wrap {
-      background: #0b1622b0;
-      backdrop-filter: blur(16px);
-      border: 1px solid #ffffff0a;
-      border-radius: 50px;
-      padding: 12px 24px;
-      margin-top: 20px;
+    /* ── TICKER ── */
+    .ticker-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 22px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
+      margin-bottom: 0;
     }
-    body.light .ticker-wrap {
-      background: #ffffffc0;
-      border-color: #b8d0f0;
-    }
-    .ticker-icon svg {
-      width: 24px;
-      height: 24px;
-      stroke: #6ea8fe;
-    }
-    body.light .ticker-icon svg { stroke: #1e4f9e; }
+    .ticker-icon { color: var(--accent); display: flex; }
+    .ticker-icon svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; }
     .ticker-content {
-      flex: 1;
-      overflow: hidden;
-      height: 36px;
-      position: relative;
+      flex: 1; overflow: hidden; height: 26px; position: relative;
     }
     .ticker-item {
-      position: absolute;
-      width: 100%;
-      font-size: 1.2rem;
-      font-weight: 450;
-      color: #dfebff;
+      position: absolute; width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.88rem; font-weight: 400;
+      color: var(--muted);
       white-space: nowrap;
-      animation: tickerSlide 0.4s ease;
+      animation: tickIn 0.35s ease;
     }
-    body.light .ticker-item { color: #0a1a2b; }
-    @keyframes tickerSlide {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes tickIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .audio-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
     }
 
-    /* Center toast – shared styles */
-    .center-toast {
+    /* ── TOASTS ── */
+    .toast {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -70%);
-      background: #132236e0;
-      backdrop-filter: blur(30px);
-      border: 1px solid #5fa3ff80;
-      border-radius: 100px;
-      padding: 22px 48px;
-      box-shadow: 0 20px 40px #00000060, 0 0 60px #3a8cff40;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -60%) scale(0.96);
       z-index: 999;
+      pointer-events: none;
       opacity: 0;
       transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-      pointer-events: none;
-      text-align: center;
-      min-width: 320px;
     }
-    body.light .center-toast {
-      background: #ffffffec;
-      border-color: #3a8cff;
-      box-shadow: 0 20px 40px #00000020, 0 0 40px #3a8cff40;
-    }
-    .center-toast.show {
+    .toast.show {
       opacity: 1;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%) scale(1);
     }
-    .toast-text {
-      font-size: 2.2rem;
-      font-weight: 600;
-      color: white;
-      text-shadow: 0 0 20px #aad0ff;
-      line-height: 1.3;
+    .toast-inner {
+      background: rgba(10,14,22,0.92);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(61,139,255,0.4);
+      border-radius: 24px;
+      padding: 26px 52px;
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 80px rgba(61,139,255,0.15);
+      min-width: 340px;
     }
-    body.light .toast-text {
-      color: #0a1a2b;
-      text-shadow: none;
+    .toast-name {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1.2;
     }
     .toast-sub {
-      font-size: 1.2rem;
-      color: #bdd6ff;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent2);
       margin-top: 6px;
+      letter-spacing: 0.08em;
     }
-    body.light .toast-sub { color: #2a4a7a; }
-
-    /* R2 toast – only the message, larger */
-    .r2-toast .toast-text {
-      font-size: 2.5rem;
+    .toast-diff {
+      display: inline-block;
+      margin-top: 10px;
+      background: rgba(245,200,66,0.12);
+      border: 1px solid rgba(245,200,66,0.3);
+      border-radius: 100px;
+      padding: 4px 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--gold);
     }
 
-    .audio-hint {
-      margin-left: 12px;
-      font-size: 0.85rem;
-      color: #99b8e0;
+    .r2-toast-inner {
+      background: rgba(10,14,22,0.92);
+      backdrop-filter: blur(30px);
+      border: 1px solid rgba(0,229,192,0.35);
+      border-radius: 20px;
+      padding: 22px 44px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 60px rgba(0,229,192,0.1);
+      max-width: 480px;
     }
-    body.light .audio-hint { color: #1e3a5f; }
+    .r2-message {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .r2-badge {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent2);
+    }
 
-    @media (max-width: 800px) {
-      .counters-grid { grid-template-columns: 1fr; }
-      .counter-value { font-size: 6rem; }
-      .toast-text { font-size: 1.8rem; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .stats-bar { flex-direction: column; }
+      .main-card { padding: 28px 24px; }
+      .counter-hero { font-size: 5.5rem; }
+      .team-name { font-size: 1.5rem; }
+      .toast-inner { min-width: 280px; padding: 22px 32px; }
     }
   </style>
 </head>
-<body class="dark">
-<div class="bg-orb orb1"></div>
-<div class="bg-orb orb2"></div>
+<body>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
 
-<div class="dashboard">
-  <div class="top-bar">
-    <div class="status-chip">
-      <span class="live-dot"></span>
-      <span id="syncLabel">LIVE</span>
+<div class="shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <span class="brand-label">Sales Race</span>
+      <span id="syncLabel">· connecting</span>
     </div>
-    <div class="icon-btn" id="audioBtn" title="Enable sound">
-      <svg viewBox="0 0 24 24">
-        <path d="M3 10V14H7L12 19V5L7 10H3Z" />
-        <path d="M16 8.5C17.3333 10 17.3333 14 16 15.5" />
-        <path d="M19 5C22 9 22 15 19 19" />
-      </svg>
-    </div>
-    <div class="icon-btn" id="themeToggle" title="Toggle light/dark mode">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 3V4M12 20V21M21 12H20M4 12H3M18.364 5.636L17.657 6.343M6.343 17.657L5.636 18.364M18.364 18.364L17.657 17.657M6.343 6.343L5.636 5.636" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
-      </svg>
+    <div class="topbar-right">
+      <button class="pill-btn" id="audioBtn">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 10V14H7L12 19V5L7 10H3Z"/>
+          <path d="M16 8.5C17.3333 10 17.3333 14 16 15.5"/>
+          <path d="M19 5C22 9 22 15 19 19"/>
+        </svg>
+        <span id="audioStateHint">Sound off</span>
+      </button>
     </div>
   </div>
 
-  <div class="counters-grid">
-    <div class="team-card">
-      <div class="team-header">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 2L15 9H22L16 14L19 21L12 16.5L5 21L8 14L2 9H9L12 2Z" stroke="currentColor" stroke-linejoin="round"/>
-        </svg>
-        <div class="team-name" id="bellaName">Bella's Team</div>
-      </div>
-      <div class="counter-value" id="bellaCounter">0</div>
-      <div class="member-strip" id="bellaMembers"></div>
+  <!-- STATS BAR (G1 / G2) -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card" id="statCard1">
+      <div class="stat-label" id="statLabel1">Stat</div>
+      <div class="stat-value" id="statValue1">—</div>
     </div>
-    <div class="team-card">
-      <div class="team-header">
-        <svg viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
-          <path d="M12 6V12L16 14" stroke="currentColor" stroke-linecap="round"/>
-        </svg>
-        <div class="team-name" id="cassieName">Cassie's Team</div>
-      </div>
-      <div class="counter-value" id="cassieCounter">0</div>
-      <div class="member-strip" id="cassieMembers"></div>
+    <div class="stat-card" id="statCard2">
+      <div class="stat-label">Target</div>
+      <div class="stat-value is-number" id="statValue2">—</div>
     </div>
   </div>
 
-  <div class="ticker-wrap">
+  <!-- MAIN COUNTER CARD -->
+  <div class="main-card" id="mainCard">
+    <div class="card-header">
+      <div>
+        <div class="team-eyebrow">Team Performance</div>
+        <div class="team-name" id="teamName">Loading…</div>
+      </div>
+      <div class="total-badge">
+        TOTAL &nbsp;<span id="totalBadge">0</span>
+      </div>
+    </div>
+
+    <div class="counter-hero" id="heroCounter">0</div>
+
+    <div class="member-grid" id="memberGrid"></div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker-bar">
     <div class="ticker-icon">
-      <svg viewBox="0 0 24 24">
-        <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" stroke-width="2" fill="none"/>
-      </svg>
+      <svg viewBox="0 0 24 24"><path d="M22 12H18L15 21L9 3L6 12H2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <div class="ticker-content" id="tickerContent">
-      <div class="ticker-item">— Monitoring sales —</div>
+      <div class="ticker-item">Connecting to live feed…</div>
     </div>
-    <span class="audio-hint" id="audioStateHint"></span>
+    <span class="audio-hint" id="audioHint"></span>
+  </div>
+
+</div>
+
+<!-- SALE TOAST -->
+<div class="toast" id="saleToast">
+  <div class="toast-inner">
+    <div class="toast-name" id="toastName">—</div>
+    <div class="toast-sub" id="toastSub">GOT A DO</div>
+    <div class="toast-diff" id="toastDiff">+1</div>
   </div>
 </div>
 
-<!-- Sale Toast -->
-<div class="center-toast" id="centerToast">
-  <div class="toast-text" id="toastMain">Sale!</div>
-  <div class="toast-sub" id="toastSub"></div>
-</div>
-
-<!-- R2 Message Toast (only the message) -->
-<div class="center-toast r2-toast" id="r2Toast">
-  <div class="toast-text" id="r2ToastMessage">Message</div>
+<!-- R2 MESSAGE TOAST -->
+<div class="toast" id="r2Toast">
+  <div class="r2-toast-inner">
+    <div class="r2-badge">Message</div>
+    <div class="r2-message" id="r2Msg">—</div>
+  </div>
 </div>
 
 <script>
-  (function(){
-    "use strict";
+(function () {
+  "use strict";
 
-    // ======================== CONFIG ========================
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwf1auwHmR3RPGRSxxYzwl1-N2eyI8WOP99DagjN7qPDWZxm8QR97m7ClxNcLer6fXq/exec';
-    const POLL_INTERVAL = 5000;
-    const CELEBRATION_DURATION = 30000;      // 30 sec confetti
-    const SALE_TOAST_DURATION = 30000;       // 30 sec for sale toast
-    const R2_TOAST_DURATION = 15000;         // 15 sec for R2 message
-    const QUEUE_GAP = 30000;                 // 30 sec between queued sales
+  // ─── CONFIG ───────────────────────────────────────────────
+  const API_URL        = 'https://script.google.com/macros/s/AKfycbxxE4hoBybG-HJGR9AYKjE1cXYhU9SIThzdy23xxLyzSSI5FEbvlEDn33wpz-tcdLkB/exec';
+  const POLL_MS        = 5000;
+  const CELEBRATE_MS   = 25000;   // confetti duration
+  const SALE_TOAST_MS  = 25000;   // how long sale toast stays
+  const R2_TOAST_MS    = 15000;   // how long R2 toast stays
+  const QUEUE_GAP_MS   = 22000;   // wait between queued celebrations
 
-    // ======================== STATE ========================
-    let previousData = null;
-    let audioCtx = null;
-    let audioAllowed = false;
-    let celebrationQueue = [];
-    let isCelebrating = false;
-    let celebrationTimer = null;
-    let soundSource = null;
-    let saleToastTimeout = null;
-    let r2ToastTimeout = null;
+  // ─── STATE ───────────────────────────────────────────────
+  let prev            = null;
+  let audioCtx        = null;
+  let audioAllowed    = false;
+  let soundRef        = null;
+  let queue           = [];
+  let celebrating     = false;
+  let saleToastTimer  = null;
+  let r2ToastTimer    = null;
 
-    // DOM elements
-    const bellaName = document.getElementById('bellaName');
-    const bellaCounter = document.getElementById('bellaCounter');
-    const bellaMembers = document.getElementById('bellaMembers');
-    const cassieName = document.getElementById('cassieName');
-    const cassieCounter = document.getElementById('cassieCounter');
-    const cassieMembers = document.getElementById('cassieMembers');
-    const tickerContent = document.getElementById('tickerContent');
-    const syncLabel = document.getElementById('syncLabel');
-    const audioBtn = document.getElementById('audioBtn');
-    const audioStateHint = document.getElementById('audioStateHint');
-    const centerToast = document.getElementById('centerToast');
-    const toastMain = document.getElementById('toastMain');
-    const toastSub = document.getElementById('toastSub');
-    const r2Toast = document.getElementById('r2Toast');
-    const r2ToastMessage = document.getElementById('r2ToastMessage');
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
+  // ─── DOM ─────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const syncLabel    = $('syncLabel');
+  const audioBtn     = $('audioBtn');
+  const audioHint    = $('audioHint');
+  const statLabel1   = $('statLabel1');
+  const statValue1   = $('statValue1');
+  const statValue2   = $('statValue2');
+  const statCard2    = $('statCard2');
+  const teamName     = $('teamName');
+  const totalBadge   = $('totalBadge');
+  const heroCounter  = $('heroCounter');
+  const memberGrid   = $('memberGrid');
+  const tickerWrap   = $('tickerContent');
+  const mainCard     = $('mainCard');
+  const saleToast    = $('saleToast');
+  const toastName    = $('toastName');
+  const toastSub     = $('toastSub');
+  const toastDiff    = $('toastDiff');
+  const r2Toast      = $('r2Toast');
+  const r2Msg        = $('r2Msg');
+  const statsBar     = $('statsBar');
 
-    // Theme toggle
-    themeToggle.addEventListener('click', () => {
-      body.classList.toggle('light');
-      body.classList.toggle('dark');
+  // ─── AUDIO ───────────────────────────────────────────────
+  function initCtx() {
+    if (audioCtx) return;
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+
+  async function enableAudio() {
+    initCtx();
+    if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
+    audioAllowed = true;
+    audioBtn.classList.add('active');
+    audioHint.textContent = '';
+    const span = audioBtn.querySelector('span');
+    if (span) span.textContent = 'Sound on';
+    tick('Audio enabled');
+  }
+
+  function stopSounds() {
+    if (!soundRef) return;
+    ['o1','o2','o3','o4'].forEach(k => { try { soundRef[k] && soundRef[k].stop(); } catch(e){} });
+    soundRef = null;
+  }
+
+  function playSale() {
+    if (!audioAllowed || !audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    stopSounds();
+    const now = audioCtx.currentTime;
+    const mg = audioCtx.createGain(); mg.gain.value = 0.75; mg.connect(audioCtx.destination);
+    const mk = (freq, type, start, vol, dur) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(start === 0 ? vol : 0, now + start);
+      if (start > 0) g.gain.linearRampToValueAtTime(vol, now + start + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      o.connect(g).connect(mg);
+      o.start(now + start); o.stop(now + dur);
+      return o;
+    };
+    soundRef = {
+      o1: mk(1396.9, 'triangle', 0,    0.9, 10),
+      o2: mk(1760.0, 'sine',     0,    0.7, 10),
+      o3: mk(1046.5, 'triangle', 0.55, 0.7, 10),
+      o4: mk(1318.5, 'sine',     0.55, 0.6, 10),
+    };
+  }
+
+  function playR2() {
+    if (!audioAllowed || !audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    stopSounds();
+    const now = audioCtx.currentTime;
+    const mg = audioCtx.createGain(); mg.gain.value = 0.5; mg.connect(audioCtx.destination);
+    const o1 = audioCtx.createOscillator(), g1 = audioCtx.createGain();
+    o1.type = 'sine'; o1.frequency.value = 2093;
+    g1.gain.setValueAtTime(0.6, now); g1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    o1.connect(g1).connect(mg); o1.start(); o1.stop(now + 0.35);
+    const o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
+    o2.type = 'sine'; o2.frequency.value = 2637;
+    g2.gain.setValueAtTime(0, now + 0.4); g2.gain.linearRampToValueAtTime(0.6, now + 0.41);
+    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+    o2.connect(g2).connect(mg); o2.start(now + 0.4); o2.stop(now + 0.8);
+    soundRef = { o1, o2 };
+  }
+
+  // ─── TICKER ──────────────────────────────────────────────
+  function tick(msg) {
+    const el = document.createElement('div');
+    el.className = 'ticker-item';
+    el.textContent = msg;
+    tickerWrap.innerHTML = '';
+    tickerWrap.appendChild(el);
+  }
+
+  // ─── CONFETTI ────────────────────────────────────────────
+  function burst() {
+    const end = Date.now() + CELEBRATE_MS;
+    const frame = () => {
+      confetti({ particleCount: 3, angle: 60,  spread: 55, origin: { x: 0, y: 0.7 }, colors: ['#3d8bff','#f5c842','#00e5c0','#fff'] });
+      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: ['#3d8bff','#f5c842','#00e5c0','#fff'] });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    confetti({ particleCount: 160, spread: 80, origin: { y: 0.6 } });
+    setTimeout(() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }), 220);
+    frame();
+  }
+
+  // ─── TOASTS ──────────────────────────────────────────────
+  function showSaleToast(name, diff) {
+    if (saleToastTimer) clearTimeout(saleToastTimer);
+    toastName.textContent = name;
+    toastSub.textContent  = 'GOT A DO!';
+    toastDiff.textContent = `+${diff}`;
+    saleToast.classList.add('show');
+    saleToastTimer = setTimeout(() => saleToast.classList.remove('show'), SALE_TOAST_MS);
+  }
+
+  function showR2Toast(msg) {
+    if (r2ToastTimer) clearTimeout(r2ToastTimer);
+    r2Msg.textContent = msg;
+    r2Toast.classList.add('show');
+    r2ToastTimer = setTimeout(() => r2Toast.classList.remove('show'), R2_TOAST_MS);
+  }
+
+  // ─── QUEUE ───────────────────────────────────────────────
+  function processQueue() {
+    if (celebrating || queue.length === 0) return;
+    const ev = queue.shift();
+    celebrating = true;
+
+    showSaleToast(ev.name, ev.diff);
+    playSale();
+    burst();
+    tick(`${ev.name}  +${ev.diff} DO  ·  ${ev.team}`);
+    mainCard.classList.add('celebrate');
+
+    heroCounter.classList.add('pop');
+    setTimeout(() => heroCounter.classList.remove('pop'), 600);
+
+    // flash the specific member tag
+    const tags = memberGrid.querySelectorAll('.member-tag');
+    tags.forEach(t => {
+      if (t.dataset.name === ev.name) t.classList.add('flash');
+      setTimeout(() => t.classList.remove('flash'), 700);
     });
 
-    // ======================== AUDIO ========================
-    function initAudio() {
-      if (audioCtx) return true;
-      try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        return true;
-      } catch (e) {
-        return false;
-      }
+    setTimeout(() => {
+      celebrating = false;
+      mainCard.classList.remove('celebrate');
+      processQueue();
+    }, QUEUE_GAP_MS);
+  }
+
+  function enqueue(events) {
+    events.forEach(e => queue.push(e));
+    if (!celebrating) processQueue();
+  }
+
+  // ─── CHANGE DETECTION ────────────────────────────────────
+  function diff(newData) {
+    if (!prev) return;
+
+    // Sales
+    const sales = [];
+    const prevMap = new Map((prev.bella?.members || []).map(m => [m.name, m.value]));
+    (newData.bella?.members || []).forEach(m => {
+      const old = prevMap.get(m.name) || 0;
+      if (m.value > old) sales.push({ name: m.name, team: newData.bella.name, diff: m.value - old });
+    });
+    if (sales.length) enqueue(sales);
+
+    // R2 message
+    const oldR2 = prev.r2Message || '';
+    const newR2 = newData.r2Message || '';
+    if (newR2 && newR2 !== oldR2) {
+      showR2Toast(newR2);
+      playR2();
+      tick(newR2);
+    }
+  }
+
+  // ─── RENDER ──────────────────────────────────────────────
+  function render(data) {
+    // Stats bar: G1 (text), G2 (number)
+    const g1 = data.g1Label || '';
+    const g1val = data.g1Value || '';
+    const g2val = data.g2Value;
+
+    if (g1val || g1) {
+      statLabel1.textContent = g1 || 'Stat';
+      statValue1.textContent = g1val !== '' ? g1val : '—';
+      statsBar.style.display = '';
+    } else {
+      statsBar.style.display = 'none';
     }
 
-    async function enableAudio() {
-      if (!initAudio()) return;
-      if (audioCtx.state === 'suspended') await audioCtx.resume();
-      audioAllowed = true;
-      audioStateHint.textContent = 'Sound on';
-      audioBtn.style.color = '#6ef0b0';
-      updateTicker('Audio enabled');
+    if (g2val !== undefined && g2val !== '') {
+      statValue2.textContent = g2val;
+      statValue2.classList.add('is-number');
+    } else {
+      statValue2.textContent = '—';
     }
 
-    function stopSound() {
-      if (soundSource) {
-        try {
-          if (soundSource.osc1) soundSource.osc1.stop();
-          if (soundSource.osc2) soundSource.osc2.stop();
-          if (soundSource.osc3) soundSource.osc3.stop();
-          if (soundSource.osc4) soundSource.osc4.stop();
-        } catch(e) {}
-        soundSource = null;
-      }
+    // Main counter
+    const bella = data.bella;
+    if (!bella) return;
+
+    teamName.textContent   = bella.name;
+    heroCounter.textContent = bella.total;
+    totalBadge.textContent  = bella.total;
+
+    // Members
+    memberGrid.innerHTML = bella.members.map(m =>
+      `<div class="member-tag" data-name="${m.name}">
+        <span class="name">${m.name}</span>
+        <span class="val">${m.value}</span>
+      </div>`
+    ).join('');
+  }
+
+  // ─── FETCH ───────────────────────────────────────────────
+  async function fetchData() {
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const isFirst = !prev;
+      diff(data);
+      render(data);
+      prev = data;
+      syncLabel.textContent = isFirst ? '· live' : '· live';
+    } catch(e) {
+      console.warn(e);
+      syncLabel.textContent = '· reconnecting';
     }
+  }
 
-    // Sale sound – loud 10‑second bell
-    function playSaleSound() {
-      if (!audioAllowed || !audioCtx) return;
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      stopSound();
+  // ─── INIT ────────────────────────────────────────────────
+  initCtx();
+  audioHint.textContent = '';
+  audioBtn.querySelector('span').textContent = 'Sound off';
+  audioBtn.addEventListener('click', enableAudio);
 
-      const now = audioCtx.currentTime;
-      const masterGain = audioCtx.createGain();
-      masterGain.gain.setValueAtTime(0.75, now);
-      masterGain.connect(audioCtx.destination);
-
-      const osc1 = audioCtx.createOscillator();
-      osc1.type = 'triangle';
-      osc1.frequency.value = 1396.9;
-      const osc2 = audioCtx.createOscillator();
-      osc2.type = 'sine';
-      osc2.frequency.value = 1760.0;
-
-      const gain1 = audioCtx.createGain();
-      gain1.gain.setValueAtTime(0.9, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 10);
-      osc1.connect(gain1);
-      osc2.connect(gain1);
-      gain1.connect(masterGain);
-      osc1.start();
-      osc2.start();
-      osc1.stop(now + 10);
-      osc2.stop(now + 10);
-
-      const osc3 = audioCtx.createOscillator();
-      osc3.type = 'triangle';
-      osc3.frequency.value = 1046.5;
-      const osc4 = audioCtx.createOscillator();
-      osc4.type = 'sine';
-      osc4.frequency.value = 1318.5;
-
-      const gain2 = audioCtx.createGain();
-      gain2.gain.setValueAtTime(0, now + 0.55);
-      gain2.gain.linearRampToValueAtTime(0.7, now + 0.56);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 10);
-      osc3.connect(gain2);
-      osc4.connect(gain2);
-      gain2.connect(masterGain);
-      osc3.start(now + 0.55);
-      osc4.start(now + 0.55);
-      osc3.stop(now + 10);
-      osc4.stop(now + 10);
-
-      soundSource = { osc1, osc2, osc3, osc4, gain1, gain2, masterGain };
-    }
-
-    // R2 notification sound – distinct double ding
-    function playR2Sound() {
-      if (!audioAllowed || !audioCtx) return;
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      stopSound();
-
-      const now = audioCtx.currentTime;
-      const masterGain = audioCtx.createGain();
-      masterGain.gain.setValueAtTime(0.5, now);
-      masterGain.connect(audioCtx.destination);
-
-      const osc1 = audioCtx.createOscillator();
-      osc1.type = 'sine';
-      osc1.frequency.value = 2093.0;
-      const gain1 = audioCtx.createGain();
-      gain1.gain.setValueAtTime(0.6, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-      osc1.connect(gain1).connect(masterGain);
-      osc1.start();
-      osc1.stop(now + 0.35);
-
-      const osc2 = audioCtx.createOscillator();
-      osc2.type = 'sine';
-      osc2.frequency.value = 2637.0;
-      const gain2 = audioCtx.createGain();
-      gain2.gain.setValueAtTime(0, now + 0.4);
-      gain2.gain.linearRampToValueAtTime(0.6, now + 0.41);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
-      osc2.connect(gain2).connect(masterGain);
-      osc2.start(now + 0.4);
-      osc2.stop(now + 0.8);
-
-      soundSource = { osc1, osc2, gain1, gain2, masterGain };
-    }
-
-    // ======================== TOASTS ========================
-    function showSaleToast(name, team) {
-      if (saleToastTimeout) clearTimeout(saleToastTimeout);
-      toastMain.textContent = `${name} · ${team}`;
-      toastSub.textContent = 'Got a DO!';
-      centerToast.classList.add('show');
-      saleToastTimeout = setTimeout(() => {
-        centerToast.classList.remove('show');
-      }, SALE_TOAST_DURATION);
-    }
-
-    function showR2Toast(message) {
-      if (r2ToastTimeout) clearTimeout(r2ToastTimeout);
-      r2ToastMessage.textContent = message;
-      r2Toast.classList.add('show');
-      r2ToastTimeout = setTimeout(() => {
-        r2Toast.classList.remove('show');
-      }, R2_TOAST_DURATION);
-    }
-
-    // ======================== TICKER (clean, no symbols) ========================
-    function updateTicker(message) {
-      const item = document.createElement('div');
-      item.className = 'ticker-item';
-      item.textContent = message; // pure text, no emoji/symbols
-      tickerContent.innerHTML = '';
-      tickerContent.appendChild(item);
-    }
-
-    // ======================== CONFETTI ========================
-    function startConfetti() {
-      const end = Date.now() + CELEBRATION_DURATION;
-      const frame = () => {
-        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: ['#4da6ff', '#ffd966', '#fff'] });
-        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: ['#4da6ff', '#ffd966', '#fff'] });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      };
-      frame();
-      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-      setTimeout(() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }), 200);
-    }
-
-    // ======================== QUEUE ========================
-    function processQueue() {
-      if (isCelebrating || celebrationQueue.length === 0) return;
-      
-      const event = celebrationQueue.shift();
-      isCelebrating = true;
-
-      showSaleToast(event.name, event.team);
-      updateTicker(`${event.name} · ${event.team}  +${event.diff} DO`);
-      playSaleSound();
-      startConfetti();
-      
-      bellaCounter.classList.add('pop');
-      cassieCounter.classList.add('pop');
-      setTimeout(() => {
-        bellaCounter.classList.remove('pop');
-        cassieCounter.classList.remove('pop');
-      }, 500);
-
-      celebrationTimer = setTimeout(() => {
-        isCelebrating = false;
-        processQueue();
-      }, QUEUE_GAP);
-    }
-
-    function enqueueSaleEvents(events) {
-      events.forEach(ev => celebrationQueue.push(ev));
-      if (!isCelebrating) processQueue();
-    }
-
-    // ======================== CHANGE DETECTION ========================
-    function detectChanges(newData) {
-      if (!previousData) return;
-
-      // Sales detection
-      const sales = [];
-      const prevBella = new Map(previousData.bella.members.map(m => [m.name, m.value]));
-      newData.bella.members.forEach(m => {
-        const prev = prevBella.get(m.name) || 0;
-        if (m.value > prev) {
-          sales.push({ team: newData.bella.name, name: m.name, diff: m.value - prev });
-        }
-      });
-
-      const prevCassie = new Map(previousData.cassie.members.map(m => [m.name, m.value]));
-      newData.cassie.members.forEach(m => {
-        const prev = prevCassie.get(m.name) || 0;
-        if (m.value > prev) {
-          sales.push({ team: newData.cassie.name, name: m.name, diff: m.value - prev });
-        }
-      });
-
-      if (sales.length) {
-        enqueueSaleEvents(sales);
-      }
-
-      // R2 message detection
-      const prevR2 = previousData.r2Message || '';
-      const newR2 = newData.r2Message || '';
-      if (newR2 !== prevR2 && newR2.trim() !== '') {
-        showR2Toast(newR2);
-        playR2Sound();
-        updateTicker(newR2); // clean text, no 📢
-      }
-    }
-
-    // ======================== RENDER ========================
-    function render(data) {
-      bellaName.textContent = data.bella.name;
-      cassieName.textContent = data.cassie.name;
-      bellaCounter.textContent = data.bella.total;
-      cassieCounter.textContent = data.cassie.total;
-
-      bellaMembers.innerHTML = data.bella.members.map(m => 
-        `<div class="member-tag">${m.name} <strong>${m.value}</strong></div>`).join('');
-      cassieMembers.innerHTML = data.cassie.members.map(m => 
-        `<div class="member-tag">${m.name} <strong>${m.value}</strong></div>`).join('');
-    }
-
-    // ======================== FETCH ========================
-    async function fetchData() {
-      try {
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        
-        if (!previousData) {
-          render(data);
-          updateTicker('Dashboard connected');
-        } else {
-          detectChanges(data);
-          render(data);
-        }
-        previousData = data;
-        syncLabel.textContent = 'LIVE';
-      } catch (e) {
-        console.warn(e);
-        syncLabel.textContent = 'RECONNECT';
-      }
-    }
-
-    // ======================== INIT ========================
-    function init() {
-      fetchData();
-      setInterval(fetchData, POLL_INTERVAL);
-      
-      audioBtn.addEventListener('click', enableAudio);
-      initAudio();
-      audioStateHint.textContent = 'Click speaker';
-    }
-
-    init();
-  })();
+  fetchData();
+  setInterval(fetchData, POLL_MS);
+})();
 </script>
 </body>
 </html>
