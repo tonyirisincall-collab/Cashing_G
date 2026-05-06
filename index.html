@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
   <style>
+    /* ── DARK THEME (default) ── */
     :root {
       --bg:        #06080d;
       --surface:   #0c1017;
@@ -25,6 +26,21 @@
       --red:       #ff4d6d;
     }
 
+    /* ── LIGHT THEME ── */
+    body.theme-light {
+      --bg:        #f5f7fb;
+      --surface:   #ffffff;
+      --border:    rgba(0,0,0,0.12);
+      --accent:    #2b6df6;
+      --accent2:   #00a884;
+      --gold:      #d4a50c;
+      --text:      #1a1f2e;
+      --muted:     #5b657e;
+      --glow:      rgba(43,109,246,0.08);
+      --glow2:     rgba(0,168,132,0.06);
+      --card-bg:   rgba(0,0,0,0.025);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
@@ -34,6 +50,7 @@
       min-height: 100vh;
       overflow-x: hidden;
       position: relative;
+      transition: background 0.3s, color 0.3s;
     }
 
     /* ── GRID BACKGROUND ── */
@@ -45,6 +62,11 @@
         linear-gradient(90deg, rgba(61,139,255,0.04) 1px, transparent 1px);
       background-size: 48px 48px;
       pointer-events: none;
+    }
+    body.theme-light::before {
+      background-image:
+        linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
     }
 
     /* ── AMBIENT GLOW BLOBS ── */
@@ -84,7 +106,6 @@
       justify-content: space-between;
       margin-bottom: 32px;
     }
-
     .brand {
       display: flex; align-items: center; gap: 10px;
     }
@@ -125,26 +146,21 @@
     }
     .pill-btn.active { color: var(--accent2); border-color: var(--accent2); }
 
-    /* ── STATS BOX (G1 / G2) ── */
-    .stats-bar {
+    /* ── SINGLE TARGET CARD ── */
+    .target-card {
       display: flex;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .stat-card {
-      flex: 1;
+      align-items: center;
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 20px 26px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      padding: 20px 28px;
+      margin-bottom: 24px;
+      gap: 16px;
+      transition: border-color 0.3s;
       position: relative;
       overflow: hidden;
-      transition: border-color 0.3s;
     }
-    .stat-card::before {
+    .target-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -153,33 +169,28 @@
       opacity: 0;
       transition: opacity 0.3s;
     }
-    .stat-card:hover::before { opacity: 1; }
-    .stat-card:hover { border-color: rgba(61,139,255,0.25); }
-
-    .stat-label {
-      font-size: 0.7rem;
+    .target-card:hover::before { opacity: 1; }
+    .target-card .target-label {
+      font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--muted);
+      min-width: 80px;
     }
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      line-height: 1;
-    }
-    .stat-value.is-number {
+    .target-card .target-value {
       font-family: 'DM Mono', monospace;
       font-size: 2.4rem;
+      font-weight: 500;
+      line-height: 1;
       color: var(--gold);
       text-shadow: 0 0 20px rgba(245,200,66,0.3);
+      flex: 1;
     }
-    .stat-value.pop {
-      animation: statPop 0.5s cubic-bezier(0.2,0.9,0.4,1.2);
+    .target-value.pop {
+      animation: pop 0.5s cubic-bezier(0.2,0.9,0.4,1.2);
     }
-    @keyframes statPop {
+    @keyframes pop {
       50% { transform: scale(1.06); color: var(--gold); }
     }
 
@@ -205,7 +216,6 @@
       border-color: var(--gold);
       box-shadow: 0 0 60px rgba(245,200,66,0.1), inset 0 0 40px rgba(245,200,66,0.04);
     }
-
     .card-header {
       display: flex;
       align-items: flex-start;
@@ -236,7 +246,6 @@
       color: var(--accent);
       letter-spacing: 0.05em;
     }
-
     .counter-hero {
       font-family: 'DM Mono', monospace;
       font-size: clamp(6rem, 14vw, 10rem);
@@ -310,7 +319,6 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 0;
     }
     .ticker-icon { color: var(--accent); display: flex; }
     .ticker-icon svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; }
@@ -413,9 +421,14 @@
       color: var(--accent2);
     }
 
+    /* Theme toggle icons */
+    .sun-icon, .moon-icon { display: none; }
+    body:not(.theme-light) .moon-icon { display: block; }
+    body.theme-light .sun-icon { display: block; }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 640px) {
-      .stats-bar { flex-direction: column; }
+      .target-card { flex-direction: column; align-items: flex-start; gap: 4px; }
       .main-card { padding: 28px 24px; }
       .counter-hero { font-size: 5.5rem; }
       .team-name { font-size: 1.5rem; }
@@ -437,6 +450,22 @@
       <span id="syncLabel">· connecting</span>
     </div>
     <div class="topbar-right">
+      <button class="pill-btn" id="themeToggle" title="Toggle theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
       <button class="pill-btn" id="audioBtn">
         <svg viewBox="0 0 24 24">
           <path d="M3 10V14H7L12 19V5L7 10H3Z"/>
@@ -448,16 +477,10 @@
     </div>
   </div>
 
-  <!-- STATS BAR (G1 / G2) -->
-  <div class="stats-bar" id="statsBar">
-    <div class="stat-card" id="statCard1">
-      <div class="stat-label" id="statLabel1">Stat</div>
-      <div class="stat-value" id="statValue1">—</div>
-    </div>
-    <div class="stat-card" id="statCard2">
-      <div class="stat-label">Target</div>
-      <div class="stat-value is-number" id="statValue2">—</div>
-    </div>
+  <!-- SINGLE TARGET CARD (G1 Label / G2 Number) -->
+  <div class="target-card" id="targetCard">
+    <div class="target-label" id="targetLabel">Target</div>
+    <div class="target-value" id="targetValue">—</div>
   </div>
 
   <!-- MAIN COUNTER CARD -->
@@ -512,12 +535,12 @@
   "use strict";
 
   // ─── CONFIG ───────────────────────────────────────────────
-  const API_URL        = 'https://script.google.com/macros/s/AKfycbxxE4hoBybG-HJGR9AYKjE1cXYhU9SIThzdy23xxLyzSSI5FEbvlEDn33wpz-tcdLkB/exec';
+  const API_URL        = 'https://script.google.com/macros/s/AKfycbzBzPd_y1EwOs1AmpCOyn8N_RPpQZs65tbtb0kBupnzdtiH0FgCJ0Sh28xIvmHxvUHI/exec';
   const POLL_MS        = 5000;
-  const CELEBRATE_MS   = 25000;   // confetti duration
-  const SALE_TOAST_MS  = 25000;   // how long sale toast stays
-  const R2_TOAST_MS    = 15000;   // how long R2 toast stays
-  const QUEUE_GAP_MS   = 22000;   // wait between queued celebrations
+  const CELEBRATE_MS   = 25000;
+  const SALE_TOAST_MS  = 25000;
+  const R2_TOAST_MS    = 15000;
+  const QUEUE_GAP_MS   = 22000;
 
   // ─── STATE ───────────────────────────────────────────────
   let prev            = null;
@@ -532,12 +555,12 @@
   // ─── DOM ─────────────────────────────────────────────────
   const $ = id => document.getElementById(id);
   const syncLabel    = $('syncLabel');
+  const themeToggle  = $('themeToggle');
   const audioBtn     = $('audioBtn');
   const audioHint    = $('audioHint');
-  const statLabel1   = $('statLabel1');
-  const statValue1   = $('statValue1');
-  const statValue2   = $('statValue2');
-  const statCard2    = $('statCard2');
+  const targetLabel  = $('targetLabel');
+  const targetValue  = $('targetValue');
+  const targetCard   = $('targetCard');
   const teamName     = $('teamName');
   const totalBadge   = $('totalBadge');
   const heroCounter  = $('heroCounter');
@@ -550,7 +573,11 @@
   const toastDiff    = $('toastDiff');
   const r2Toast      = $('r2Toast');
   const r2Msg        = $('r2Msg');
-  const statsBar     = $('statsBar');
+
+  // ─── THEME TOGGLE ────────────────────────────────────────
+  themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('theme-light');
+  });
 
   // ─── AUDIO ───────────────────────────────────────────────
   function initCtx() {
@@ -672,7 +699,6 @@
     heroCounter.classList.add('pop');
     setTimeout(() => heroCounter.classList.remove('pop'), 600);
 
-    // flash the specific member tag
     const tags = memberGrid.querySelectorAll('.member-tag');
     tags.forEach(t => {
       if (t.dataset.name === ev.name) t.classList.add('flash');
@@ -695,7 +721,6 @@
   function diff(newData) {
     if (!prev) return;
 
-    // Sales
     const sales = [];
     const prevMap = new Map((prev.bella?.members || []).map(m => [m.name, m.value]));
     (newData.bella?.members || []).forEach(m => {
@@ -704,7 +729,6 @@
     });
     if (sales.length) enqueue(sales);
 
-    // R2 message
     const oldR2 = prev.r2Message || '';
     const newR2 = newData.r2Message || '';
     if (newR2 && newR2 !== oldR2) {
@@ -716,24 +740,16 @@
 
   // ─── RENDER ──────────────────────────────────────────────
   function render(data) {
-    // Stats bar: G1 (text), G2 (number)
-    const g1 = data.g1Label || '';
-    const g1val = data.g1Value || '';
-    const g2val = data.g2Value;
+    // Single target card: G1 label + G2 number
+    const g1Label = data.g1Label || '';
+    const g2Val   = data.g2Value;
 
-    if (g1val || g1) {
-      statLabel1.textContent = g1 || 'Stat';
-      statValue1.textContent = g1val !== '' ? g1val : '—';
-      statsBar.style.display = '';
+    if (g1Label || (g2Val !== undefined && g2Val !== '')) {
+      targetLabel.textContent = g1Label || 'Target';
+      targetValue.textContent = (g2Val !== undefined && g2Val !== '') ? g2Val : '—';
+      targetCard.style.display = '';
     } else {
-      statsBar.style.display = 'none';
-    }
-
-    if (g2val !== undefined && g2val !== '') {
-      statValue2.textContent = g2val;
-      statValue2.classList.add('is-number');
-    } else {
-      statValue2.textContent = '—';
+      targetCard.style.display = 'none';
     }
 
     // Main counter
@@ -744,7 +760,6 @@
     heroCounter.textContent = bella.total;
     totalBadge.textContent  = bella.total;
 
-    // Members
     memberGrid.innerHTML = bella.members.map(m =>
       `<div class="member-tag" data-name="${m.name}">
         <span class="name">${m.name}</span>
@@ -775,7 +790,6 @@
   audioHint.textContent = '';
   audioBtn.querySelector('span').textContent = 'Sound off';
   audioBtn.addEventListener('click', enableAudio);
-
   fetchData();
   setInterval(fetchData, POLL_MS);
 })();
